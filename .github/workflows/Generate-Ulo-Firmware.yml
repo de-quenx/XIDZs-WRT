@@ -161,15 +161,15 @@ jobs:
             - Default password: xyyraa
             - Default WIFI name: XIDZs-WRT | XIDZs-WRT_5G
             - Default WIFI password: none
-            ### Amlogic Series
+            ## Amlogic Series
             - **S905X2**: HG680-FJ, B860Hv5  
             - **S905X4**: Akari Ax810, Advan AT01
-            ### Allwinner Series
+            ## Allwinner Series
             - **H5**: Orange Pi Zero Plus2, Orange Pi Zero Plus
             - **H6**: Orange Pi 3, Orange Pi 3 LTS
             - **H616**: Orange Pi Zero2
             - **H618**: Orange Pi Zero3
-            ## FEATURES ##
+            ## FEATURES
             - Tema Alpha ⨯ Tema Argon ⨯ Tema Material
             - Amlogic Service ⨯ Droidnet
             - 3ginfo-Lite ⨯ Modeminfo ⨯ IP Information
@@ -178,7 +178,7 @@ jobs:
             - Internet Detector ⨯ Connection Monitor
             - Modem Support ⨯ Auto Reconnect
             - Auto Time Sync ⨯ File Manager
-            ## TUNNEL OPTIONS ##
+            ## TUNNEL OPTIONS
             - OpenClash
             - OpenClash + Nikki
             - OpenClash + Nikki + Passwall
