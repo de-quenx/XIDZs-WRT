@@ -219,16 +219,12 @@ fi
 # setup misc settings and permission
 log_status "INFO" "Setting up miscellaneous settings and permissions..."
 check_status "sed -i -e 's/\[ -f \/etc\/banner \] && cat \/etc\/banner/#&/' -e 's/\[ -n \"\$FAILSAFE\" \] && cat \/etc\/banner.failsafe/& || \/usr\/bin\/idz/' /etc/profile" "Profile banner configuration modified"
-check_status "chmod +x /usr/lib/ModemManager/connection.d/10-report-down" "ModemManager script permissions set"
 check_status "chmod -R +x /sbin /usr/bin" "Binary directories permissions set"
-check_status "chmod +x /www/vnstati/vnstati.sh" "VnStati script permissions set"
+check_status "chmod +x /etc/init.d/vnstat_backup" "vnstat_backup permission set"
+check_status "chmod +x /usr/lib/ModemManager/connection.d/10-report-down" "ModemManager script permissions set"
+check_status "chmod +x /www/cgi-bin/reset-vnstat.sh /www/vnstati/vnstati.sh" "Sett Permission vnstat script"
 check_status "chmod 600 /etc/vnstat.conf" "vnstat.conf permission set"
-
-if [ -f /root/install2.sh ]; then
-    check_status "chmod +x /root/install2.sh && /root/install2.sh" "Secondary installation script executed"
-else
-    log_status "WARNING" "install2.sh not found, skipping"
-fi
+check_status "chmod +x /root/install2.sh && /root/install2.sh" "install2 script executed"
 
 # add auto sinkron jam
 log_status "INFO" "Add Auto Sinkron Jam And Clean Cache...."
@@ -252,13 +248,8 @@ log_status "INFO" "Running VnStati script..."
 check_status "/www/vnstati/vnstati.sh" "VnStati script executed"
 
 # setup Auto Vnstat Database Backup
-log_status "INFO" "Setting up VnStat database backup..."
-check_status "chmod +x /etc/init.d/vnstat_backup && /etc/init.d/vnstat_backup enable" "VnStat backup service enabled"
-
-# add auto reset db
-log_status "INFO" "add auto reset db and set permission"
-check_status "mv /root/reset-vnstat.sh /www/cgi-bin/reset-vnstat.sh 2>/dev/null || true" "add script reset db"
-check_status "chmod +x /www/cgi-bin/reset-vnstat.sh" "sett permission reset-vnstat.sh"
+log_status "INFO" "Enable VnStat database backup..."
+check_status "/etc/init.d/vnstat_backup enable" "vnstat backup service enabled"
 
 # add TTL
 log_status "INFO" "Adding and running TTL script..."
