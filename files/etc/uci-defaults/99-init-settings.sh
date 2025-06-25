@@ -216,7 +216,7 @@ else
     check_status "rm -f /usr/bin/k5hgled /usr/bin/k6hgled /usr/bin/k5hgledon /usr/bin/k6hgledon" "Removed LED control binaries"
 fi
 
-# setup misc settings and permission
+# setup misc settings
 log_status "INFO" "Setting up miscellaneous settings and permissions..."
 check_status "sed -i -e 's/\[ -f \/etc\/banner \] && cat \/etc\/banner/#&/' -e 's/\[ -n \"\$FAILSAFE\" \] && cat \/etc\/banner.failsafe/& || \/usr\/bin\/idz/' /etc/profile" "Profile banner configuration modified"
 check_status "chmod -R +x /sbin /usr/bin" "Binary directories permissions set"
