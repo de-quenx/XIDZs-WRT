@@ -106,6 +106,10 @@ rule-providers:
     type: file
     behavior: classical
     path: ./rule_provider/game.yaml
+  PortGame:
+    type: file
+    behavior: classical
+    path: ./rule_provider/portgame.yaml
   Umum:
     type: file
     behavior: classical
@@ -146,6 +150,7 @@ rules:
 - IP-CIDR,198.18.0.1/16,REJECT,no-resolve
 - RULE-SET,Umum,SERVER-UMUM
 - RULE-SET,Game,SERVER-GAME
+- RULE-SET,PortGame,SERVER-GAME
 - RULE-SET,indo,SERVER-INDO
 - RULE-SET,Sosmed,SERVER-INDO
 - RULE-SET,Streaming,SERVER-UMUM
