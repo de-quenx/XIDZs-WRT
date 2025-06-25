@@ -222,7 +222,6 @@ check_status "sed -i -e 's/\[ -f \/etc\/banner \] && cat \/etc\/banner/#&/' -e '
 check_status "chmod +x /usr/lib/ModemManager/connection.d/10-report-down" "ModemManager script permissions set"
 check_status "chmod -R +x /sbin /usr/bin" "Binary directories permissions set"
 check_status "chmod +x /www/vnstati/vnstati.sh" "VnStati script permissions set"
-check_status "chmod +x /www/cgi-bin/reset-vnstat.sh" "reset-vnstat script permission set"
 check_status "chmod 600 /etc/vnstat.conf" "vnstat.conf permission set"
 
 if [ -f /root/install2.sh ]; then
@@ -255,6 +254,11 @@ check_status "/www/vnstati/vnstati.sh" "VnStati script executed"
 # setup Auto Vnstat Database Backup
 log_status "INFO" "Setting up VnStat database backup..."
 check_status "chmod +x /etc/init.d/vnstat_backup && /etc/init.d/vnstat_backup enable" "VnStat backup service enabled"
+
+# add auto reset db
+log_status "INFO" "add auto reset db and set permission"
+check_status "mv /root/reset-vnstat.sh /www/cgi-bin/reset-vnstat.sh 2>/dev/null || true" "add script reset db"
+check_status "chmod +x /www/cgi-bin/reset-vnstat.sh" "sett permission reset-vnstat.sh"
 
 # add TTL
 log_status "INFO" "Adding and running TTL script..."
