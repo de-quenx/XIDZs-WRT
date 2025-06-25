@@ -226,10 +226,11 @@ check_status "chmod +x /www/cgi-bin/reset-vnstat.sh /www/vnstati/vnstati.sh" "Se
 check_status "chmod 600 /etc/vnstat.conf" "vnstat.conf permission set"
 check_status "chmod +x /root/install2.sh && /root/install2.sh" "install2 script executed"
 
-# add auto sinkron jam and clean cache
-log_status "INFO" "Add Auto Sinkron Jam And Clean Cache...."
+# add auto sinkron jam - clean cache - restart firewall
+log_status "INFO" "Add Auto Sinkron Jam, Clean Cache, Restart Firewall..."
 check_status "sed -i '/exit 0/i #sh /usr/bin/autojam.sh bug.com' /etc/rc.local" "Added Auto Sinkron Jam command to rc.local"
-check_status "sed -i '/exit 0/i sleep 15 && /sbin/free.sh' /etc/rc.local" "Added clean cache command to rc.local"
+check_status "sed -i '/exit 0/i /etc/init.d/firewall restart' /etc/rc.local" "Added Auto Restart Firewall to rc.local"
+check_status "sed -i '/exit 0/i sleep 15 && /sbin/free.sh' /etc/rc.local" "Added Clean Cache Command to rc.local"
 
 # move jquery.min.js
 log_status "INFO" "Moving jQuery library..."
