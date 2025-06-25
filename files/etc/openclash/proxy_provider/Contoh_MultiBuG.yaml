@@ -1,0 +1,145 @@
+# Modification By @xidz_x # Full Rule Simole #
+akun: &sni1
+  server: server.com
+  port: 443
+  type: vless
+  uuid: e12f52cd-7e50-4fdd-97d0-809d658d9926
+  alterId: 0
+  cipher: auto
+  tls: true
+  skip-cert-verify: true
+  network: ws
+  ws-opts:
+    path: /vless-ws
+    headers:
+      Host: server.com
+  udp: true
+akun2: &sni2
+  server: server.com
+  port: 443
+  type: vless
+  uuid: e12f52cd-7e50-4fdd-97d0-809d658d9926
+  alterId: 0
+  cipher: auto
+  tls: true
+  skip-cert-verify: true
+  network: ws
+  ws-opts:
+    path: /vless-ws
+    headers:
+      Host: server.com
+  udp: true
+akun3: &sni3
+  server: server.com
+  port: 443
+  type: vless
+  uuid: e12f52cd-7e50-4fdd-97d0-809d658d9926
+  alterId: 0
+  cipher: auto
+  tls: true
+  skip-cert-verify: true
+  network: ws
+  ws-opts:
+    path: /vless-ws
+    headers:
+      Host: server.com
+  udp: true
+akun4: &ws1
+  port: 80
+  type: vless
+  uuid: e12f52cd-7e50-4fdd-97d0-809d658d9926
+  alterId: 0
+  cipher: auto
+  tls: false
+  skip-cert-verify: true
+  network: ws
+  ws-opts:
+    path: /vless-ws
+    headers:
+      Host: server.com
+  udp: true
+akun5: &ws2
+  port: 80
+  type: vless
+  uuid: e12f52cd-7e50-4fdd-97d0-809d658d9926
+  alterId: 0
+  cipher: auto
+  tls: false
+  skip-cert-verify: true
+  network: ws
+  ws-opts:
+    path: /vless-ws
+    headers:
+      Host: server.com
+  udp: true
+akun6: &ws3
+  port: 80
+  type: vless
+  uuid: e12f52cd-7e50-4fdd-97d0-809d658d9926
+  alterId: 0
+  cipher: auto
+  tls: false
+  skip-cert-verify: true
+  network: ws
+  ws-opts:
+    path: /vless-ws
+    headers:
+      Host: server.com
+  udp: true
+# Multi BuG # ( SNI-SSL )( WS - WEBSOCKET )
+proxies:
+  - name: VIP-1
+    <<: *sni1
+    servername: bug
+  - name: VIP-2
+    <<: *sni1
+    servername: bug
+  - name: VIP-3
+    <<: *sni1
+    servername: bug
+  - name: VIP-4
+    <<: *sni2
+    servername: bug
+  - name: VIP-5
+    <<: *sni2
+    servername: bug
+  - name: VIP-6
+    <<: *sni2
+    servername: bug
+  - name: VIP-7
+    <<: *sni3
+    servername: bug
+  - name: VIP-8
+    <<: *sni3
+    servername: bug
+  - name: VIP-9
+    <<: *sni3
+    servername: bug
+  - name: VIP-WS-1
+    <<: *ws1
+    server: bug
+  - name: VIP-WS-2
+    <<: *ws1
+    server: bug
+  - name: VIP-WS-3
+    <<: *ws1
+    server: bug
+  - name: VIP-WS-4
+    <<: *ws2
+    server: bug
+  - name: VIP-WS-5
+    <<: *ws2
+    server: bug
+  - name: VIP-WS-6
+    <<: *ws2
+    server: bug
+  - name: VIP-WS-7
+    <<: *ws3
+    server: bug
+  - name: VIP-WS-8
+    <<: *ws3
+    server: bug
+  - name: VIP-WS-9
+    <<: *ws3
+    server: bug
+    

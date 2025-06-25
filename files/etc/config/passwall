@@ -1,0 +1,924 @@
+
+config nodes 'b922c50dd2c34c98b65bea495c9c0693'
+	option type 'Xray'
+	option protocol '_shunt'
+	option domainStrategy 'IPOnDemand'
+	option domainMatcher 'hybrid'
+	option Streaming_ID_proxy_tag 'main'
+	option Direct_WA '_direct'
+	option remarks 'Extra_Unlimited'
+	option Streaming_ID 'e8594a90b1d442f3ba70c768137f1bb2'
+	option Netflix_ID 'e8594a90b1d442f3ba70c768137f1bb2'
+	option Netflix_ID_proxy_tag 'main'
+	option Direct_GamesMax '_direct'
+	option Direct_Tiktok '_direct'
+	option default_node 'b13703be2d2a4491a560a3eef8e632a2'
+	option main_node 'e8594a90b1d442f3ba70c768137f1bb2'
+
+config global
+	option socks_enabled '0'
+	option dns_mode 'pdnsd'
+	option localhost_tcp_proxy_mode 'default'
+	option localhost_udp_proxy_mode 'default'
+	option close_log_tcp '0'
+	option close_log_udp '0'
+	option loglevel 'error'
+	option trojan_loglevel '4'
+	option udp_node 'tcp'
+	option dns_cache '1'
+	option dns_forward '1.1.1.1'
+	option tcp_proxy_mode 'global'
+	option udp_proxy_mode 'global'
+	option tcp_node 'b922c50dd2c34c98b65bea495c9c0693'
+	option enabled '0'
+
+config global_haproxy
+	option balancing_enable '0'
+
+config global_delay
+	option auto_on '0'
+	option start_daemon '1'
+	option start_delay '1'
+
+config global_forwarding
+	option process '0'
+	option tcp_no_redir_ports 'disable'
+	option udp_no_redir_ports '53'
+	option tcp_proxy_drop_ports 'disable'
+	option udp_proxy_drop_ports '80,443'
+	option tcp_redir_ports '22,25,53,143,465,587,853,993,995,80,443'
+	option udp_redir_ports '1:65535'
+	option accept_icmp '0'
+	option tcp_proxy_way 'redirect'
+	option ipv6_tproxy '0'
+	option sniffing '1'
+	option route_only '0'
+
+config global_other
+	option nodes_ping 'auto_ping tcping'
+
+config global_rules
+	option auto_update '0'
+	option chnlist_update '1'
+	option chnroute_update '1'
+	option chnroute6_update '1'
+	option gfwlist_update '1'
+	option geosite_update '0'
+	option geoip_update '0'
+	list gfwlist_url 'https://cdn.jsdelivr.net/gh/YW5vbnltb3Vz/domain-list-community@release/gfwlist.txt'
+	list chnroute_url 'https://ispip.clang.cn/all_cn.txt'
+	list chnroute6_url 'https://ispip.clang.cn/all_cn_ipv6.txt'
+	list chnlist_url 'https://cdn.jsdelivr.net/gh/felixonmars/dnsmasq-china-list/accelerated-domains.china.conf'
+	list chnlist_url 'https://cdn.jsdelivr.net/gh/felixonmars/dnsmasq-china-list/apple.china.conf'
+	list chnlist_url 'https://cdn.jsdelivr.net/gh/felixonmars/dnsmasq-china-list/google.china.conf'
+	option v2ray_location_asset '/usr/share/v2ray/'
+
+config global_app
+	option v2ray_file '/usr/bin/v2ray'
+	option xray_file '/usr/bin/xray'
+	option trojan_go_file '/usr/bin/trojan-go'
+	option brook_file '/usr/bin/brook'
+	option hysteria_file '/usr/bin/hysteria'
+
+config global_subscribe
+	option subscribe_proxy '0'
+	option filter_keyword_mode '1'
+	list filter_discard_list '过期时间'
+	list filter_discard_list '剩余流量'
+	list filter_discard_list 'QQ群'
+	list filter_discard_list '官网'
+
+config auto_switch
+	option testing_time '1'
+	option connect_timeout '3'
+	option retry_num '3'
+	option shunt_logic '1'
+	option restore_switch '1'
+	option enable '0'
+
+config shunt_rules 'Streaming_ID'
+	option remarks 'Streaming_ID'
+	option protocol 'http tls'
+	option domain_list 'com.google.android.youtube
+com.google.android.youtube.tv
+youtube
+yt3.ggpht.com
+googlevideo.com
+gvt2.com
+youtu.be
+ytimg.com
+vidio.com
+api.vidio.com
+static-playback-vidio-com.akamaized
+cdn-production-thumbor-vidio.akamaized
+etslive-2-vidio-com.akamaized
+live.vidio.com
+api-ns.vidio.com
+hermes.vidio.com
+token-media-vidio.com.akamaized.net
+geo-id-media-vidio-com.akamaized.net
+geo-id-tl-media-vidio-com.akamaized.net
+vidio.com.edgesuite.net
+production-drm-vidio-com-event-18.akamaized.net
+hbogoasia.com
+hbogoasia.hk
+bcbolthboa-a.akamaihd.net
+players.brightcove.net
+s3-ap-southeast-1.amazonaws.com
+dai3fd1oh325y.cloudfront.net
+44wilhpljf.execute-api.ap-southeast-1.amazonaws.com
+hboasia1-i.akamaihd.net
+hboasia2-i.akamaihd.net
+hboasia3-i.akamaihd.net
+hboasia4-i.akamaihd.net
+hboasia5-i.akamaihd.net
+cf-images.ap-southeast-1.prod.boltdns.net
+bcbolthboa-a.akamaihd.net
+cf-images.ap-southeast-1.prod.boltdns.net
+cinemax.com
+dai3fd1oh325y.cloudfront.net
+execute-api.ap-southeast-1.amazonaws.com
+execute-api.us-east-1.amazonaws.com
+forthethrone.com
+hbo.com
+hboasia.com
+hboasia1-i.akamaihd.net
+hboasia2-i.akamaihd.net
+hboasia3-i.akamaihd.net
+hboasia4-i.akamaihd.net
+hboasia5-i.akamaihd.net
+hboasialive.akamaized.net
+hbogeo.cust.footprint.net
+hbogo.com
+hbogoprod-vod.akamaized.net
+hbolb.onwardsmg.com
+hbomax.com
+hbomaxcdn.com
+hbonow.com
+hbounify-prod.evergent.com
+manifest.prod.boltdns.net
+maxgo.com
+now-ashare.com
+now-tv.com
+now.com
+now.com.hk
+nowe.com
+nowe.hk
+players.brightcove.net
+s3-ap-southeast-1.amazonaws.com
+youboranqs01.com
+hbo.com
+hbogo.com
+hbonow.com
+hbomax.com
+hotstar.com
+expressplay.com
+measurement.com
+bamgrid.com
+disneyplus.com
+disney-plus.net
+disneystreaming.com
+dssott.com
+cdn.registerdisney.go.com'
+
+config shunt_rules 'Netflix_ID'
+	option remarks 'Netflix_ID'
+	option protocol 'http tls'
+	option ip_list '103.87.204.0/22
+108.175.32.0/20
+185.2.0.0/16
+185.9.0.0/16
+192.173.64.0/18
+198.38.96.0/19
+198.45.48.0/20
+207.45.72.0/22
+208.75.76.0/22
+23.246.0.0/18
+45.57.0.0/17
+52.89.124.203/32
+54.148.37.5/32
+64.120.128.0/17
+66.197.128.0/17
+69.53.224.0/19
+103.148.240.0/24
+103.164.7.0/24
+159.221.224.0/22
+159.221.244.0/22
+185.159.140.0/24
+185.16.228.0/22
+195.177.72.0/22
+195.47.253.0/24
+31.223.224.0/21
+103.149.180.0/24
+203.116.0.0/16
+203.198.0.0/20
+203.198.80.0/21
+203.75.84.0/24
+203.83.220.0/22
+207.45.73.0/24
+218.102.32.0/19
+219.76.0.0/17
+23.78.0.0/16
+34.192.0.0/16
+34.208.0.0/12
+34.248.0.0/13
+35.160.0.0/13
+37.77.0.0/16
+37.77.184.0/21
+38.72.126.0/24
+44.224.0.0/16
+44.230.0.0/16
+52.0.0.0/15
+52.10.0.0/15
+52.12.0.0/15
+52.22.0.0/16
+52.24.0.0/14
+52.32.0.0/14
+52.40.0.0/14
+52.5.0.0/16
+52.54.0.0/16
+52.7.0.0/16
+52.71.40.0/16
+52.72.0.0/16
+52.88.0.0/15
+54.0.0.0/16
+54.148.0.0/15
+54.175.0.0/16
+54.186.0.0/15
+54.188.0.0/15
+54.213.0.0/16
+54.214.128.0/17
+54.68.0.0/15
+54.85.0.0/16
+54.86.0.0/16
+8.41.4.0/24'
+	option domain_list 'com.netflix.mediaclient
+netflix
+dualstack.apiproxy
+netflix.api.fast.com
+netflix.com.edgesuite.net
+netflix.com
+netflix.net
+netflixdnstest0.com
+netflixdnstest1.com
+netflixdnstest2.com
+netflixdnstest3.com
+netflixdnstest4.com
+netflixdnstest5.com
+netflixdnstest6.com
+netflixdnstest7.com
+netflixdnstest8.com
+netflixdnstest9.com
+nflxext.com
+nflximg.com
+nflximg.net
+nflxso.net
+nflxvideo.net'
+
+config shunt_rules 'Direct_GamesMax'
+	option remarks 'Direct_GamesMax'
+	option protocol 'http tls'
+	option ip_list '104.64.0.0/10
+45.40.220.0/22
+150.109.124.0/23
+49.51.228.0/23
+170.106.102.0/24'
+	option domain_list 'www.mobilelegends.com
+api.mobilelegends.com
+static.mobilelegends.com
+play.mobilelegends.com
+m.mobilelegends.com
+www.mobilelegends.com
+applink.mobilelegends.com
+assistant.mobilelegends.com
+creatorcamp.mobilelegends.com
+dev-test-web.mobilelegends.com
+esports.mobilelegends.com
+ftp.mobilelegends.com
+game.mobilelegends.com
+lore.mobilelegends.com
+m.mobilelegends.com
+manage.mobilelegends.com
+moba.mobilelegends.com
+kh.mpl.mobilelegends.com
+my.mpl.mobilelegends.com
+mysg.mpl.mobilelegends.com
+mysg-s4.mpl.mobilelegends.com
+mysg-s5.mpl.mobilelegends.com
+mysg-s6.mpl.mobilelegends.com
+sg.mpl.mobilelegends.com
+www.sg.mpl.mobilelegends.com
+msc.mobilelegends.com
+mtacc.mobilelegends.com
+play.mobilelegends.com
+static.mobilelegends.com
+web.mobilelegends.com
+worlds.mobilelegends.com
+garena.com
+avatargarenanow-a.akamaihd.net
+cdngarenanow-a.akamaihd.net
+dlmobilegarena-a.akamaihd.net
+garena.co.id
+garena.co.th
+garena.live
+garena.my
+garena.ph
+garena.sg
+garena.tv
+garena.tw
+garena.vn
+garenanow.com
+seagroup.com
+igamecj.com
+igamecj.akamaized.net
+playvalorant.com'
+
+config shunt_rules 'Direct_WA'
+	option remarks 'Direct_WA'
+	option protocol 'http tls'
+	option domain_list 'whatsapp.com
+whatsapp.net'
+	option ip_list '31.13.64.51
+31.13.65.49
+31.13.66.49
+31.13.68.52
+31.13.69.240
+31.13.70.49
+31.13.71.49
+31.13.72.52
+31.13.73.49
+31.13.74.49
+31.13.75.52
+31.13.76.81
+31.13.77.49
+31.13.78.53
+31.13.80.53
+31.13.81.53
+31.13.82.51
+31.13.83.51
+31.13.84.51
+31.13.85.51
+31.13.86.51
+31.13.87.51
+31.13.88.49
+31.13.90.51
+31.13.91.51
+31.13.92.52
+31.13.93.51
+31.13.94.52
+31.13.95.63
+50.22.198.204/30
+50.22.210.32/30
+50.22.210.128/27
+50.22.225.64/27
+50.22.235.248/30
+50.22.240.160/27
+50.23.90.128/27
+50.97.57.128/27
+75.126.39.32/27
+108.168.174.0/27
+108.168.176.192/26
+108.168.177.0/27
+108.168.180.96/27
+108.168.254.65
+108.168.255.224
+108.168.255.227
+157.240.0.53
+157.240.1.53
+157.240.2.53
+157.240.3.53
+157.240.6.53
+157.240.7.54
+157.240.8.53
+157.240.9.53
+157.240.10.53
+157.240.11.53
+157.240.12.53
+157.240.13.54
+158.85.0.96/27
+158.85.5.192/27
+158.85.46.128/27
+158.85.48.224/27
+158.85.58.0/25
+158.85.61.192/27
+158.85.224.160/27
+158.85.233.32/27
+158.85.249.128/27
+158.85.254.64/27
+169.44.23.192/27
+169.44.36.0/25
+169.44.57.64/27
+169.44.58.64/27
+169.44.80.0/26
+169.44.82.96/27
+169.44.82.128/27
+169.44.82.192/26
+169.44.83.0/26
+169.44.83.96/27
+169.44.83.128/27
+169.44.83.192/26
+169.44.84.0/24
+169.44.85.64/27
+169.44.87.160/27
+169.44.167.0/27
+169.45.71.32/27
+169.45.71.96/27
+169.45.87.128/26
+169.45.169.192/27
+169.45.182.96/27
+169.45.210.64/27
+169.45.214.224/27
+169.45.219.224/27
+169.45.237.192/27
+169.45.238.32/27
+169.45.248.96/27
+169.45.248.160/27
+169.46.52.224/27
+169.46.111.144/28
+169.47.5.192/26
+169.47.6.64/27
+169.47.33.128/27
+169.47.35.32/27
+169.47.37.128/27
+169.47.40.128/27
+169.47.42.96/27
+169.47.42.160/27
+169.47.42.192/26
+169.47.47.160/27
+169.47.130.96/27
+169.47.192.192/27
+169.47.194.128/27
+169.47.198.128/27
+169.47.212.160/27
+169.53.29.128/27
+169.53.48.32/27
+169.53.71.224/27
+169.53.81.64/27
+169.53.250.128/26
+169.53.252.64/27
+169.53.255.64/27
+169.54.2.160/27
+169.54.44.224/27
+169.54.51.32/27
+169.54.55.192/27
+169.54.193.160/27
+169.54.210.0/27
+169.54.222.128/27
+169.55.67.224/27
+169.55.69.128/26
+169.55.74.32/27
+169.55.75.96/27
+169.55.100.160/27
+169.55.126.64/26
+169.55.210.96/27
+169.55.235.160/27
+173.192.162.32/27
+173.192.219.128/27
+173.192.222.160/27
+173.192.231.32/27
+173.193.205.0/27
+173.193.230.96/27
+173.193.230.128/27
+173.193.230.192/27
+173.193.239.0/27
+174.36.208.128/27
+174.36.210.32/27
+174.36.251.192/27
+174.37.199.192/27
+174.37.217.64/27
+174.37.243.64/27
+174.37.251.0/27
+179.60.192.51
+179.60.195.51
+184.173.136.64/27
+184.173.147.32/27
+184.173.161.64
+184.173.173.116
+184.173.179.32/27
+185.60.216.53
+185.60.218.53
+185.60.219.53
+192.155.212.192/27
+198.11.193.182/31
+198.11.251.32/27
+198.23.80.0/27
+208.43.115.192/27
+208.43.117.79
+208.43.122.128/27'
+
+config nodes 'b13703be2d2a4491a560a3eef8e632a2'
+	option remarks 'SG_OVH_Tsel'
+	option type 'Xray'
+	option protocol 'trojan'
+	option address 'sgovh-trojan.bonds.id'
+	option port '443'
+	option password '1732dba0-e022-11ec-a0da-1239d0255272'
+	option tls '1'
+	option xtls '0'
+	option alpn 'default'
+	option tls_serverName 'isi-bugnya-disini'
+	option tls_allowInsecure '1'
+	option fingerprint 'disable'
+	option transport 'tcp'
+	option tcp_guise 'none'
+
+config nodes 'e8594a90b1d442f3ba70c768137f1bb2'
+	option remarks 'Biznet_Tsel'
+	option type 'Xray'
+	option protocol 'trojan'
+	option address 'id2-trojan.bonds.id'
+	option port '443'
+	option password '61f1c020-e022-11ec-abd8-1239d0255272'
+	option tls '1'
+	option xtls '0'
+	option alpn 'default'
+	option tls_serverName 'isi-bugnya-disini'
+	option tls_allowInsecure '1'
+	option fingerprint 'disable'
+	option transport 'tcp'
+	option tcp_guise 'none'
+
+config nodes 'cbb45e33f49d43fdb8b12b70fe7ab695'
+	option address 'idtj-ikd.bonds.id'
+	option port '443'
+	option password '9d906150-e022-11ec-955c-1239d0255272'
+	option tls '1'
+	option tls_serverName 'isi-bugnya-disini'
+	option tls_allowInsecure '1'
+	option remarks 'IKD_Tsel'
+	option type 'Xray'
+	option protocol 'trojan'
+	option xtls '0'
+	option alpn 'default'
+	option fingerprint 'disable'
+	option transport 'tcp'
+	option tcp_guise 'none'
+
+config shunt_rules 'Direct_Tiktok'
+	option remarks 'Direct_Tiktok'
+	option protocol 'http tls'
+	option domain_list 'byteoversea.com
+ibytedtos.com
+ipstatp.com
+muscdn.com
+musical.ly
+tiktok.com
+tik-tokapi.com
+tiktokcdn.com
+tiktokv.com'
+	option ip_list '2.19.96.0/24
+2.19.192.0/24
+2.20.132.0/24
+2.21.84.0/24
+2.21.85.0/24
+2.23.12.0/24
+2.23.158.0/24
+8.240.30.0/24
+8.241.157.0/24
+8.252.109.0/24
+13.33.96.0/24
+13.33.146.0/24
+13.33.210.0/24
+13.35.29.0/24
+13.35.149.0/24
+13.224.160.0/24
+13.225.5.0/24
+13.225.94.0/24
+13.225.159.0/24
+13.227.254.0/24
+13.228.132.0/24
+13.228.201.0/24
+13.249.224.0/24
+18.65.181.0/24
+18.65.200.0/24
+18.67.105.0/24
+18.67.161.0/24
+18.141.84.0/24
+23.0.162.0/24
+23.1.234.0/24
+23.1.240.0/24
+23.2.16.0/24
+23.5.165.0/24
+23.11.215.0/24
+23.13.219.0/24
+23.15.138.0/24
+23.15.178.0/24
+23.32.5.0/24
+23.32.20.0/24
+23.32.29.0/24
+23.32.236.0/24
+23.32.238.0/24
+23.33.32.0/24
+23.33.33.0/24
+23.36.241.0/24
+23.38.109.0/24
+23.38.195.0/24
+23.40.40.0/24
+23.40.241.0/24
+23.40.242.0/24
+23.43.48.0/24
+23.43.49.0/24
+23.43.240.0/24
+23.44.4.0/24
+23.44.5.0/24
+23.45.12.0/24
+23.46.16.0/24
+23.46.229.0/24
+23.47.149.0/24
+23.47.190.0/24
+23.48.107.0/24
+23.48.214.0/24
+23.49.60.0/24
+23.50.117.0/24
+23.50.129.0/24
+23.50.232.0/24
+23.52.40.0/24
+23.52.70.0/24
+23.52.171.0/24
+23.53.33.0/24
+23.54.80.0/24
+23.54.81.0/24
+23.55.38.0/24
+23.55.46.0/24
+23.55.47.0/24
+23.55.110.0/24
+23.55.163.0/24
+23.55.222.0/24
+23.56.239.0/24
+23.57.76.0/24
+23.59.80.0/24
+23.59.168.0/24
+23.59.247.0/24
+23.59.252.0/24
+23.61.0.0/24
+23.61.205.0/24
+23.62.53.0/24
+23.62.106.0/24
+23.63.110.0/24
+23.63.232.0/24
+23.63.251.0/24
+23.64.3.0/24
+23.64.122.0/24
+23.67.57.0/24
+23.67.74.0/24
+23.75.23.0/24
+23.77.204.0/24
+23.77.217.0/24
+23.90.148.0/24
+23.90.178.0/24
+23.192.46.0/24
+23.192.47.0/24
+23.192.150.0/24
+23.193.170.0/24
+23.194.187.0/24
+23.195.104.0/24
+23.195.252.0/24
+23.198.11.0/24
+23.199.69.0/24
+23.200.24.0/24
+23.200.74.0/24
+23.200.142.0/24
+23.200.145.0/24
+23.200.218.0/24
+23.202.33.0/24
+23.205.70.0/24
+23.206.250.0/24
+23.210.250.0/24
+23.211.14.0/24
+23.211.15.0/24
+23.211.140.0/24
+23.212.54.0/24
+23.213.41.0/24
+23.213.43.0/24
+23.214.90.0/24
+23.216.153.0/24
+23.216.158.0/24
+23.217.52.0/24
+23.217.100.0/24
+23.219.172.0/24
+23.219.184.0/24
+23.220.203.0/24
+23.221.50.0/24
+23.223.18.0/24
+23.223.47.0/24
+34.95.100.0/24
+34.98.103.0/24
+34.101.113.0/24
+34.101.199.0/24
+34.102.156.0/24
+34.102.235.0/24
+34.107.176.0/24
+34.117.4.0/24
+34.117.26.0/24
+34.117.29.0/24
+34.117.69.0/24
+34.117.139.0/24
+34.117.152.0/24
+34.117.246.0/24
+34.120.31.0/24
+34.120.183.0/24
+34.149.167.0/24
+35.186.205.0/24
+35.190.30.0/24
+35.201.85.0/24
+36.67.17.0/24
+36.89.220.0/24
+36.91.215.0/24
+36.91.231.0/24
+36.91.232.0/24
+36.91.234.0/24
+43.152.14.0/24
+46.8.96.0/24
+47.89.121.0/24
+52.74.96.0/24
+52.74.104.0/24
+52.76.16.0/24
+52.84.251.0/24
+52.85.56.0/24
+52.85.96.0/24
+52.221.142.0/24
+52.222.133.0/24
+54.192.19.0/24
+54.192.116.0/24
+54.192.144.0/24
+54.192.171.0/24
+54.254.173.0/24
+65.8.11.0/24
+65.9.166.0/24
+69.192.217.0/24
+69.192.218.0/24
+72.246.150.0/24
+72.247.81.0/24
+72.247.127.0/24
+79.140.94.0/24
+79.140.95.0/24
+80.67.82.0/24
+81.199.96.0/24
+81.199.97.0/24
+81.199.98.0/24
+81.199.99.0/24
+84.53.177.0/24
+89.187.162.0/24
+92.122.225.0/24
+92.123.48.0/24
+92.123.180.0/24
+92.123.181.0/24
+92.223.116.0/24
+93.186.134.0/24
+95.100.242.0/24
+95.101.182.0/24
+95.101.183.0/24
+96.7.35.0/24
+96.7.229.0/24
+96.7.244.0/24
+96.7.251.0/24
+96.17.70.0/24
+96.17.96.0/24
+96.17.180.0/24
+99.86.179.0/24
+101.33.26.0/24
+101.33.27.0/24
+103.115.228.0/24
+103.120.247.0/24
+103.136.220.0/24
+103.136.221.0/24
+103.147.212.0/24
+103.147.213.0/24
+103.150.178.0/24
+103.160.155.0/24
+103.168.24.0/24
+103.168.25.0/24
+103.234.120.0/24
+103.245.120.0/24
+103.245.121.0/24
+104.70.235.0/24
+104.72.79.0/24
+104.75.169.0/24
+104.81.138.0/24
+104.84.150.0/24
+104.88.70.0/24
+104.88.71.0/24
+104.90.7.0/24
+104.100.95.0/24
+104.100.168.0/24
+104.104.52.0/24
+104.104.54.0/24
+104.104.55.0/24
+104.115.38.0/24
+104.116.243.0/24
+108.138.141.0/24
+108.158.221.0/24
+112.215.103.0/24
+112.215.161.0/24
+114.4.168.0/24
+114.5.7.0/24
+114.5.9.0/24
+114.10.2.0/24
+114.10.3.0/24
+114.122.194.0/24
+114.124.128.0/24
+114.124.192.0/24
+114.125.36.0/24
+114.125.82.0/24
+114.125.112.0/24
+114.125.160.0/24
+114.125.193.0/24
+114.125.208.0/24
+114.125.211.0/24
+116.0.81.0/24
+117.103.116.0/24
+118.82.28.0/24
+118.97.158.0/24
+118.97.159.0/24
+118.98.30.0/24
+118.98.38.0/24
+118.98.42.0/24
+118.98.76.0/24
+118.98.77.0/24
+118.98.93.0/24
+118.98.95.0/24
+118.98.97.0/24
+118.98.113.0/24
+118.214.167.0/24
+119.82.228.0/24
+122.10.253.0/24
+125.56.199.0/24
+125.56.201.0/24
+125.56.219.0/24
+128.1.54.0/24
+128.1.67.0/24
+128.1.176.0/24
+128.1.178.0/24
+128.14.113.0/24
+129.227.36.0/24
+129.227.40.0/24
+129.227.42.0/24
+130.44.212.0/24
+130.44.215.0/24
+130.211.24.0/24
+138.199.37.0/24
+139.177.225.0/24
+139.177.239.0/24
+140.213.62.0/24
+143.244.33.0/24
+147.160.190.0/24
+151.101.26.0/24
+151.101.110.0/24
+154.94.22.0/24
+154.94.23.0/24
+154.223.5.0/24
+156.59.78.0/24
+156.59.116.0/24
+156.59.172.0/24
+156.59.173.0/24
+156.233.25.0/24
+156.238.132.0/24
+160.20.223.0/24
+163.171.220.0/24
+163.181.24.0/24
+163.181.25.0/24
+163.181.26.0/24
+163.181.28.0/24
+163.181.36.0/24
+167.82.86.0/24
+169.197.123.0/24
+173.222.108.0/24
+173.222.248.0/24
+180.250.81.0/24
+180.250.127.0/24
+180.250.169.0/24
+184.25.122.0/24
+184.25.236.0/24
+184.26.43.0/24
+184.26.91.0/24
+184.26.127.0/24
+184.27.122.0/24
+184.27.123.0/24
+184.27.185.0/24
+184.28.72.0/24
+184.28.100.0/24
+184.28.218.0/24
+184.28.229.0/24
+184.28.235.0/24
+184.29.140.0/24
+184.50.85.0/24
+184.51.6.0/24
+184.51.12.0/24
+184.51.102.0/24
+184.51.194.0/24
+184.51.195.0/24
+184.84.165.0/24
+184.86.250.0/24
+199.103.24.0/24
+199.232.46.0/24
+199.232.234.0/24
+202.56.174.0/24
+202.70.57.0/24
+202.73.224.0/24
+202.179.139.0/24
+202.180.17.0/24
+203.205.137.0/24
+204.246.164.0/24
+211.152.128.0/24
+211.152.129.0/24'
+

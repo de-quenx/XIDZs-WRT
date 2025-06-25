@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>XIDZs-WRT</title>
+    <link rel="stylesheet" href="<%=media%>/xidz.css">
+    <link rel="shortcut icon" href="<%=media%>/favicon.ico">
+    <style>
+      @keyframes rainbow {
+        0% { color: #ff0000; }
+        16.66% { color: #ff8000; }
+        33.33% { color: #ffff00; }
+        50% { color: #00ff00; }
+        66.66% { color: #0080ff; }
+        83.33% { color: #8000ff; }
+        100% { color: #ff0000; }
+      }
+      
+      h2, #jam, #tanggal-lengkap {
+        animation: rainbow 3s linear infinite;
+      }
+
+      .alert-message {
+        padding: 15px 20px;
+        margin: 20px auto;
+        max-width: 400px;
+        animation: slideDown 0.5s ease-out;
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid #FFDD00 !important;
+        border-left: 4px solid #FFDD00 !important;
+        border-radius: 8px !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(255, 221, 0, 0.2) !important;
+        backdrop-filter: blur(10px) !important;
+        color: #FBFBFB !important;
+      }
+
+      .alert-message p {
+        color: #FBFBFB !important;
+        margin: 0;
+      }
+
+      .input_group input.input_text {
+        border-bottom: 2px solid rgba(255, 255, 255, 0.3) !important;
+        box-shadow: 0 2px 8px rgba(0, 255, 255, 0.6) !important;
+        transition: all 0.3s ease !important;
+      }
+
+      .input_group input.input_text:focus {
+        border-bottom: 2px solid rgba(255, 255, 255, 0.8) !important;
+        box-shadow: 0 4px 15px rgba(0, 255, 255, 1), 0 0 20px rgba(255, 0, 255, 0.5) !important;
+        outline: none !important;
+      }
+
+      @keyframes slideDown {
+        0% { opacity: 0; transform: translateY(-20px); }
+        100% { opacity: 1; transform: translateY(0); }
+      }
+
+      @keyframes slideUp {
+        0% { opacity: 1; transform: translateY(0); }
+        100% { opacity: 0; transform: translateY(-20px); }
+      }
+
+      .fade-out {
+        animation: slideUp 0.3s ease-out forwards;
+      }
+    </style>
+  </head>
+  <body>
+    <form method="post" action="<%=pcdata(FULL_REQUEST_URI)%>">
+      <%- if fuser then %>
+        <div class="alert-message" id="warning-alert">
+          <center><p><%:Username Atau Sandi Salah%><br><%:Silahkan Ingat Kembali%></p></center>
+        </div>
+      <% end -%>
+
+      <div class="login_form_container">
+        <div class="login_form">
+          <h2>XIDZs-WRT</h2>
+          
+          <center>
+            <span id="tanggal-lengkap"></span> | <span id="jam"></span>
+          </center>
+
+          <div class="input_group">
+            <i class="fa fa-user"></i>
+            <input class="input_text" type="text" name="luci_username" placeholder="Username" autocomplete="off" value="<%=duser%>" />
+          </div>
+          
+          <div class="input_group">
+            <i class="fa fa-unlock-alt"></i>
+            <input class="input_text" type="password" name="luci_password" placeholder="Password" autocomplete="off"/>
+          </div>
+          
+          <div class="button_group" id="login_button">
+            <center><input type="submit" value="<%:Login%>" /></center>
+          </div>
+        </div>
+      </div>
+    </form>
+
+    <script>
+      const updateTime = () => {
+        const now = new Date();
+        document.getElementById("jam").innerHTML = 
+          `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+      };
+
+      const setDate = () => {
+        const namaHari = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+        const namaBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", 
+                          "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+        
+        const tgl = new Date();
+        document.getElementById("tanggal-lengkap").innerHTML = 
+          `${namaHari[tgl.getDay()]}, ${tgl.getDate()} ${namaBulan[tgl.getMonth()]} ${tgl.getFullYear()}`;
+      };
+
+      const autoHideAlert = () => {
+        const alertElement = document.getElementById('warning-alert');
+        if (alertElement) {
+          setTimeout(() => {
+            alertElement.classList.add('fade-out');
+            setTimeout(() => alertElement.style.display = 'none', 300);
+          }, 3000);
+        }
+      };
+
+      document.addEventListener('DOMContentLoaded', () => {
+        setDate();
+        updateTime();
+        setInterval(updateTime, 1000);
+        autoHideAlert();
+        
+        const passwordInput = document.getElementsByName('luci_password')[0];
+        if (passwordInput) passwordInput.focus();
+      });
+    </script>
+
+    <%
+    local uci = require "luci.model.uci".cursor()
+    local fs = require "nixio.fs"
+    local https_key = uci:get("uhttpd", "main", "key")
+    local https_port = uci:get("uhttpd", "main", "listen_https")
+    
+    if type(https_port) == "table" then
+      https_port = https_port[1]
+    end
+
+    if https_port and fs.access(https_key) then
+      https_port = https_port:match("(%d+)$")
+    %>
+      <script>
+        if (document.location.protocol !== 'https:') {
+          const httpsUrl = `https://${window.location.hostname}:<%=https_port%>${window.location.pathname}`;
+          const img = new Image();
+          
+          img.onload = () => window.location = httpsUrl;
+          img.src = `https://${window.location.hostname}:<%=https_port%>/<%=resource%>/icons/loading.gif?${Math.random()}`;
+          
+          setTimeout(() => img.src = '', 240);
+        }
+      </script>
+    <% end %>
+
+    <script src="login.js"></script>
+  </body>
+</html>

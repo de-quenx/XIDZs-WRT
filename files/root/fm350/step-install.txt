@@ -1,0 +1,9 @@
+• ModemManager For Modem FM350 5G •
+1. buka terminal atau ttyd
+2. opkg remove --force-depends libmbim libqmi luci-proto-modemmanager modemmanager
+3. opkg update
+4. cd MM-FM350
+5. ls
+6. opkg install libmbim libqmi luci-proto-modemmanager modemmanager
+7. reboot devices
+8. done

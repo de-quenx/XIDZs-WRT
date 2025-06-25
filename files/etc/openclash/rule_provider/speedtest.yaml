@@ -1,0 +1,10 @@
+payload:
+  - GEOSITE,rule-speedtest
+  - GEOSITE,speedtest
+  - GEOIP,speedtest
+  - DOMAIN-KEYWORD,speedtest
+  - DOMAIN-KEYWORD,testspeed
+  - DOMAIN-KEYWORD,ookla
+  - DOMAIN-KEYWORD,speedtestcustom
+  - DOMAIN-KEYWORD,openspeedtest
+  - DST-PORT,8080
