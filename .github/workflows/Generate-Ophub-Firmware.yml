@@ -197,14 +197,14 @@ jobs:
           name: ${{ steps.setupenv.outputs.release_name }}
           prerelease: ${{ github.ref_name == 'dev' }}
           body: |
-            ## XIDZs-WRT INFORMATION##
+            ## XIDZs-WRT INFORMATION ##
             - Default IP: 192.168.1.1
             - Default username: root
             - Default password: xyyraa
             - Default WIFI: XIDZs-WRT | XIDZs-WRT_5G
             
             ## Supported Devices ##
-            ### Amlogic Series
+            ## Amlogic Series
             - **S905**: MXQ-Pro+
             - **S905D**: Phicomm-N1
             - **S905L**: B860AV2, Mibox-4
@@ -221,7 +221,7 @@ jobs:
             - **S905X4**: Advan
             - **S922X**: GT-King-Pro
             
-            ### Rockchip Series
+            ## Rockchip Series
             - **RK3318**: RK3318-BOX
             - **RK3328**: Firefly-RK3328
             
