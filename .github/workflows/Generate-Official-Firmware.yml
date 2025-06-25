@@ -172,24 +172,24 @@ jobs:
             - Default WIFI name: XIDZs-WRT | XIDZs-WRT_5G
             - Default WIFI password: none
             ## SUPPORTED DEVICES ##
-            ### Raspberry Pi Series
+            ## Raspberry Pi Series
             - **BCM2836**: Raspberry Pi 2B
             - **BCM2837**: Raspberry Pi 3B
             - **BCM2711**: Raspberry Pi 4B
-            ### NanoPi Series
+            ## NanoPi Series
             - **RK3328**: Nanopi-r2s
             - **RK3566**: Nanopi-r3s
             - **RK3399**: Nanopi-r4s
             - **RK3568**: Nanopi-r5s
             - **RK3588**: Nanopi-r6s
-            ### Orange Pi Series
+            ## Orange Pi Series
             - **RK3328**: Orangepi R1 Plus, Orangepi R1 Plus LTS
             - **H5**: Orangepi Pc 2, Orangepi Zero Plus
             - **H616**: Orangepi Zero 2
             - **H618**: Orangepi Zero 3
-            ### x86 Series
+            ## x86 Series
             - **x86-64**: Generic PC
-            ## FEATURES ##
+            ## FEATURES
             - Tema Alpha ⨯ Tema Argon ⨯ Tema Material
             - Droidnet ⨯ Modeminfo
             - 3ginfo-Lite ⨯ IP Information
@@ -198,7 +198,7 @@ jobs:
             - Internet Detector ⨯ Connection Monitor
             - Modem Support ⨯ Auto Reconnect
             - Auto Time Sync ⨯ File Manager
-            ## TUNNEL OPTIONS ##
+            ## TUNNEL OPTIONS
             - OpenClash
             - OpenClash + Nikki
             - OpenClash + Nikki + Passwall
