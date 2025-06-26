@@ -1,4 +1,4 @@
-name: Clean System Resources and Manage Stale Issues
+name: Clean System Resources
 
 on:
   workflow_dispatch:
@@ -7,43 +7,52 @@ env:
   TZ: "Asia/Jakarta"
 
 jobs:
-  cleanup:
-    runs-on: ubuntu-latest
+  cleanup:runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         
-      - name: System cleanup
-        id: cleanup
-        run: |
+      - name: System cleanupid: cleanuprun: |echo "::group::Cleaning system cache and temporary files"
           # Clean tools directory if exists
           [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
+          
           # Remove unused software directories
           sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null
+          
+          # Clean system temporary directories and logs
+          sudo find /tmp -type f -delete 2>/dev/null || truesudo find /var/tmp -type f -delete 2>/dev/null || true
+          sudo find /var/log -type f -name "*.log" -delete 2>/dev/null || true
+          sudo find /var/log -type f -name "*.gz" -delete 2>/dev/null || true# Clear journal logs
+          sudo journalctl --vacuum-time=1d
           
           # Disable and remove swap
           sudo swapoff -a
           sudo rm -f /swapfile /mnt/swapfile
+          
           # Update apt and purge unnecessary packages
           sudo -E apt-get -y update
-          sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
-          
-          # Install necessary packages for OpenWrt (if needed)
-          sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)# Reload systemd daemon
-          sudo -E systemctl daemon-reload# Clean up packages and apt cache
-          sudo -E apt-get -y autoremove --purge
+          sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true# Install necessary packages for OpenWrt (if needed)
+          sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
+          # Reload systemd daemon
+          sudo -E systemctl daemon-reload
+          # Clean up packages and apt cachesudo -E apt-get -y autoremove --purge
           sudo -E apt-get clean
+          # Clean package cache
+          sudo rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
           
           # Clean up user configuration files
-          sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
-          sudo rm -rf ~/{.cargo,.dotnet,.rustup}
+          sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile} || true
+          sudo rm -rf ~/{.cargo,.dotnet,.rustup,.cache,.npm} || true
+          # Clean GitHub Actions cache
+          sudo rm -rf "${GITHUB_WORKSPACE}/.cache"2>/dev/null || true
           # Set timezone
           sudo timedatectl set-timezone "${{ env.TZ }}"
           
-          echo "status=success" >> ${GITHUB_OUTPUT}
-          
-      - name: Check cleanup status
-        if: steps.cleanup.outputs.status != 'success'
+          # Report disk usage after cleanup
+          echo "::endgroup::"echo "::group::Disk usage after cleanup"
+          df -h
+          echo "::endgroup::"echo "status=success" >> ${GITHUB_OUTPUT}
+      - name: Check cleanup statusif: steps.cleanup.outputs.status != 'success'
         run: |
           echo "Cleanup failed!"
           exit 1
