@@ -1,9 +1,10 @@
 name: Clean System Resources and Manage Stale Issues
 
 on:
-  workflow_dispatch:  # Allows manual triggering only
+  workflow_dispatch:
 
-env:TZ: "Asia/Jakarta"  # Set your preferred timezone
+env:
+  TZ: "Asia/Jakarta"
 
 jobs:
   cleanup:
