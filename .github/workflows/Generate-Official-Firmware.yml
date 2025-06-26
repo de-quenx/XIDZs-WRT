@@ -6,12 +6,12 @@ on:
       release_branch:
         description: "Select the release branch:"
         required: true
-        default: "openwrt:24.10.2"
+        default: "openwrt:24.10.1"
         type: choice
         options:
-          - openwrt:24.10.2
+          - openwrt:24.10.1
           - openwrt:23.05.5
-          - immortalwrt:24.10.2
+          - immortalwrt:24.10.1
           - immortalwrt:23.05.4
       target:
         description: "Select device board"
@@ -36,6 +36,7 @@ on:
           - Raspberry Pi 3B
           - Raspberry Pi 4B
           - X86-64
+          - X86-Generic
       tunnel:
         description: "Select Tunnel VPN"
         required: true
@@ -105,7 +106,8 @@ jobs:
               "Raspberry Pi 2B",
               "Raspberry Pi 3B",
               "Raspberry Pi 4B",
-              "X86-64"
+              "X86-64",
+              "X86-Generic"
             ]
           }
           EOJ
@@ -174,25 +176,24 @@ jobs:
             - Default WIFI name: XIDZs-WRT | XIDZs-WRT_5G
             - Default WIFI password: none
             ## SUPPORTED DEVICES ##
-            ## Raspberry Pi Series
-            - **BCM2835**: Raspberry Pi 1B
-            - **BCM2836**: Raspberry Pi 2B
-            - **BCM2837**: Raspberry Pi 3B
+            ### Raspberry Pi Series
+            - **BCM2709**: Raspberry Pi 2B
+            - **BCM2710**: Raspberry Pi 3B
             - **BCM2711**: Raspberry Pi 4B
-            ## NanoPi Series
+            ### NanoPi Series
             - **RK3328**: Nanopi-r2s
             - **RK3566**: Nanopi-r3s
             - **RK3399**: Nanopi-r4s
             - **RK3568**: Nanopi-r5s
             - **RK3588**: Nanopi-r6s
-            ## Orange Pi Series
+            ### Orange Pi Series
             - **RK3328**: Orangepi R1 Plus, Orangepi R1 Plus LTS
             - **H5**: Orangepi Pc 2, Orangepi Zero Plus
             - **H616**: Orangepi Zero 2
             - **H618**: Orangepi Zero 3
-            ## x86 Series
+            ### x86 Series
             - **x86-64**: Generic PC
-            ## FEATURES
+            ## FEATURES ##
             - Tema Alpha ⨯ Tema Argon ⨯ Tema Material
             - Droidnet ⨯ Modeminfo
             - 3ginfo-Lite ⨯ IP Information
@@ -201,7 +202,7 @@ jobs:
             - Internet Detector ⨯ Connection Monitor
             - Modem Support ⨯ Auto Reconnect
             - Auto Time Sync ⨯ File Manager
-            ## TUNNEL OPTIONS
+            ## TUNNEL OPTIONS ##
             - OpenClash
             - OpenClash + Nikki
             - OpenClash + Nikki + Passwall
@@ -367,16 +368,16 @@ jobs:
               echo "PROFILE=rpi" >> $GITHUB_ENV
               echo "TARGET_SYSTEM=bcm27xx/bcm2708" >> $GITHUB_ENV
               echo "TARGET_NAME=bcm27xx-bcm2708" >> $GITHUB_ENV
-              echo "ARCH_1=armv6" >> $GITHUB_ENV
-              echo "ARCH_2=arm" >> $GITHUB_ENV
+              echo "ARCH_1=arm" >> $GITHUB_ENV
+              echo "ARCH_2=armv6" >> $GITHUB_ENV
               echo "ARCH_3=arm_arm1176jzf-s_vfp" >> $GITHUB_ENV
               ;;
             "Raspberry Pi 2B")
               echo "PROFILE=rpi-2" >> $GITHUB_ENV
               echo "TARGET_SYSTEM=bcm27xx/bcm2709" >> $GITHUB_ENV
               echo "TARGET_NAME=bcm27xx-bcm2709" >> $GITHUB_ENV
-              echo "ARCH_1=armv7" >> $GITHUB_ENV
-              echo "ARCH_2=arm" >> $GITHUB_ENV
+              echo "ARCH_1=arm" >> $GITHUB_ENV
+              echo "ARCH_2=arm7" >> $GITHUB_ENV
               echo "ARCH_3=arm_cortex-a7_neon-vfpv4" >> $GITHUB_ENV
               ;;
             "Raspberry Pi 3B")
@@ -402,6 +403,14 @@ jobs:
               echo "ARCH_1=amd64" >> $GITHUB_ENV
               echo "ARCH_2=x86_64" >> $GITHUB_ENV
               echo "ARCH_3=x86_64" >> $GITHUB_ENV
+              ;;
+            "X86-Generic")
+              echo "PROFILE=generic" >> $GITHUB_ENV
+              echo "TARGET_SYSTEM=x86/generic" >> $GITHUB_ENV
+              echo "TARGET_NAME=x86-generic" >> $GITHUB_ENV
+              echo "ARCH_1=386" >> $GITHUB_ENV
+              echo "ARCH_2=i386" >> $GITHUB_ENV
+              echo "ARCH_3=i386_pentium4" >> $GITHUB_ENV
               ;;
           esac
 
