@@ -16,48 +16,20 @@ jobs:
       - name: System cleanup
         id: cleanup
         run: |
-          echo "::group::Cleaning system cache and temporary files"
-          # Clean tools directory if exists
+          docker rmi $(docker images -q) 2>/dev/null
           [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
-          
-          # Remove unused software directories
           sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null
-          
-          # Clean system temporary directories and logs
-          sudo find /tmp -type f -delete 2>/dev/null || true
-          sudo find /var/tmp -type f -delete 2>/dev/null || true
-          sudo find /var/log -type f -name "*.log" -delete2>/dev/null || true
-          sudo find /var/log -type f -name "*.gz" -delete 2>/dev/null || true
-          
-          # Clear journal logs
-          sudo journalctl --vacuum-time=1d
-          
-          # Disable and remove swap
-          sudo swap off -a
+          sudo swapoff -a
           sudo rm -f /swapfile /mnt/swapfile
-          
-          # Update apt and purge unnecessary packages
           sudo -E apt-get -y update
           sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
-          # Install necessary packages for OpenWrt (if needed)sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
-          # Reload systemd daemon
+          sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
           sudo -E systemctl daemon-reload
-          # Clean up packages and apt cachesudo -E apt-get -y autoremove --purge
+          sudo -E apt-get -y autoremove --purge
           sudo -E apt-get clean
-          # Clean package cache
-          sudo rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
-          
-          # Clean up user configuration files
-          sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile} || true
-          sudo rm -rf ~/{.cargo,.dotnet,.rustup,.cache,.npm} || true
-          
-          # Clean GitHub Actions cachesudo rm -rf "${GITHUB_WORKSPACE}/.cache" 2>/dev/null || true
-          # Set timezone
+          sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
+          sudo rm -rf ~/{.cargo,.dotnet,.rustup}
           sudo timedatectl set-timezone "${{ env.TZ }}"
-          # Report disk usage after cleanupecho "::endgroup::"
-          echo "::group::Disk usage after cleanup"
-          df -h
-          echo "::endgroup::"
           
           echo "status=success" >> ${GITHUB_OUTPUT}
           
