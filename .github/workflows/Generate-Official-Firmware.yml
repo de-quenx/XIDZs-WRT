@@ -31,6 +31,7 @@ on:
           - Orangepi Zero 2
           - Orangepi Zero 3
           - Orangepi Zero Plus
+          - Raspberry Pi 1B
           - Raspberry Pi 2B
           - Raspberry Pi 3B
           - Raspberry Pi 4B
@@ -100,6 +101,7 @@ jobs:
               "Orangepi Zero 2",
               "Orangepi Zero 3",
               "Orangepi Zero Plus",
+              "Raspberry Pi 1B",
               "Raspberry Pi 2B",
               "Raspberry Pi 3B",
               "Raspberry Pi 4B",
@@ -173,6 +175,7 @@ jobs:
             - Default WIFI password: none
             ## SUPPORTED DEVICES ##
             ## Raspberry Pi Series
+            - **BCM2835**: Raspberry Pi 1B
             - **BCM2836**: Raspberry Pi 2B
             - **BCM2837**: Raspberry Pi 3B
             - **BCM2711**: Raspberry Pi 4B
@@ -359,6 +362,14 @@ jobs:
               echo "ARCH_1=arm64" >> $GITHUB_ENV
               echo "ARCH_2=aarch64" >> $GITHUB_ENV
               echo "ARCH_3=aarch64_cortex-a53" >> $GITHUB_ENV
+              ;;
+            "Raspberry Pi 1B")
+              echo "PROFILE=rpi" >> $GITHUB_ENV
+              echo "TARGET_SYSTEM=bcm27xx/bcm2708" >> $GITHUB_ENV
+              echo "TARGET_NAME=bcm27xx-bcm2708" >> $GITHUB_ENV
+              echo "ARCH_1=armv6" >> $GITHUB_ENV
+              echo "ARCH_2=arm" >> $GITHUB_ENV
+              echo "ARCH_3=arm_arm1176jzf-s_vfp" >> $GITHUB_ENV
               ;;
             "Raspberry Pi 2B")
               echo "PROFILE=rpi-2" >> $GITHUB_ENV
