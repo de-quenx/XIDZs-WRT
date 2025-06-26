@@ -47,8 +47,6 @@ jobs:
           echo "Cleanup failed!"
           exit 1
 
-  stale:
-    runs-on: ubuntu-lateststeps:
       - uses: actions/stale@v9.0.0with:
           stale-issue-message: "Stale Issue"
           stale-pr-message: "Stale PR"
