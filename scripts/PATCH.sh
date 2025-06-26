@@ -61,16 +61,18 @@ configure_amlogic() {
     fi
 }
 
-# Apply x86_64-specific configurations
-configure_x86_64() {
-    if [ "${ARCH_2}" == "x86_64" ]; then
-        log "INFO" "Applying x86_64-specific configurations"
+# Apply x86_generic-specific configurations
+configure_x86_generic() {
+    if [[ "${ARCH_2}" == "x86_64" || "${ARCH_1}" == "386" || "${ARCH_2}" == "i386" ]]; then
+        log "INFO" "Applying x86 generic configurations"
         # Disable ISO images generation
         sed -i "s/CONFIG_ISO_IMAGES=y/# CONFIG_ISO_IMAGES is not set/" .config
         # Disable VHDX images generation
         sed -i "s/CONFIG_VHDX_IMAGES=y/# CONFIG_VHDX_IMAGES is not set/" .config
     fi
 }
+
+
 
 # Main execution
 main() {
@@ -80,7 +82,7 @@ main() {
     patch_makefile
     configure_partitions
     configure_amlogic
-    configure_x86_64
+    configure_x86_generic
     log "INFO" "Builder patch completed successfully!"
 }
 
