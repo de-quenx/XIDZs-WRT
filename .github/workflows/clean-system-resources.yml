@@ -33,10 +33,12 @@ jobs:
           sudo journalctl --vacuum-time=1d
           
           # Disable and remove swap
-          sudo swapoff -asudo rm -f /swapfile /mnt/swapfile
+          sudo swap off -a
+          sudo rm -f /swapfile /mnt/swapfile
           
           # Update apt and purge unnecessary packages
-          sudo -E apt-get -y updatesudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
+          sudo -E apt-get -y update
+          sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
           # Install necessary packages for OpenWrt (if needed)sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
           # Reload systemd daemon
           sudo -E systemctl daemon-reload
