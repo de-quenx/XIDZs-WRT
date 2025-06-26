@@ -5,10 +5,6 @@
 # openclash_core URL generation
 if [[ "${ARCH_3}" == "x86_64" ]]; then
     meta_file="mihomo-linux-${ARCH_1}-compatible"
-elif [[ "${ARCH_3}" == "i386_pentium4" ]]; then
-    meta_file="mihomo-linux-386"
-elif [[ "${ARCH_1}" == "armv6" ]]; then
-    meta_file="mihomo-linux-armv6"
 else
     meta_file="mihomo-linux-${ARCH_1}"
 fi
