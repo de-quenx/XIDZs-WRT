@@ -1,5 +1,5 @@
 <h3 align="center">OpenWrt | ImmortalWrt</h3>
-<h4 align="center">23.05.5 | 24.10.1</h4>
+<h4 align="center">23.05.5 | 24.10.2</h4>
 <p align="center"><em>ImageBuilder | UloBuilder</em></p>
 
 ---
