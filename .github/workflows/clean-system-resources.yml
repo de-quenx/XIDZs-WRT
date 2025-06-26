@@ -59,7 +59,8 @@ jobs:
           
           echo "status=success" >> ${GITHUB_OUTPUT}
           
-      - name: Check cleanup statusif: steps.cleanup.outputs.status != 'success'
+      - name: Check cleanup status
+        if: steps.cleanup.outputs.status != 'success'
         run: |
           echo "Cleanup failed!"
           exit 1
