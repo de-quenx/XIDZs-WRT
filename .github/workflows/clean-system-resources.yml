@@ -1,10 +1,9 @@
-name: Clean System Resources
+name: Clean System Resources and Manage Stale Issues
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # Allows manual triggering only
 
-env:
-  TZ: "Asia/Jakarta"
+env:TZ: "Asia/Jakarta"  # Set your preferred timezone
 
 jobs:
   cleanup:
@@ -18,25 +17,19 @@ jobs:
         run: |
           # Clean tools directory if exists
           [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
-          
           # Remove unused software directories
           sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null
           
           # Disable and remove swap
           sudo swapoff -a
           sudo rm -f /swapfile /mnt/swapfile
-          
           # Update apt and purge unnecessary packages
           sudo -E apt-get -y update
           sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
           
           # Install necessary packages for OpenWrt (if needed)
-          sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
-          
-          # Reload systemd daemon
-          sudo -E systemctl daemon-reload
-          
-          # Clean up packages and apt cache
+          sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)# Reload systemd daemon
+          sudo -E systemctl daemon-reload# Clean up packages and apt cache
           sudo -E apt-get -y autoremove --purge
           sudo -E apt-get clean
           
@@ -45,29 +38,34 @@ jobs:
           sudo rm -rf ~/{.cargo,.dotnet,.rustup}
           # Set timezone
           sudo timedatectl set-timezone "${{ env.TZ }}"
+          
           echo "status=success" >> ${GITHUB_OUTPUT}
           
       - name: Check cleanup status
         if: steps.cleanup.outputs.status != 'success'
         run: |
-          echo "Cleanup failed!"exit 1
+          echo "Cleanup failed!"
+          exit 1
 
   stale:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/stale@v9.0.0
-        with:
+    runs-on: ubuntu-lateststeps:
+      - uses: actions/stale@v9.0.0with:
           stale-issue-message: "Stale Issue"
           stale-pr-message: "Stale PR"
-          stale-issue-label: "no-issue-activity"
-          exempt-issue-labels: "awaiting-approval,awaiting,work-in-progress"
+          stale-issue-label: "no-issue-activity"exempt-issue-labels: "awaiting-approval,awaiting,work-in-progress"
           stale-pr-label: "no-pr-activity"
           exempt-pr-labels: "awaiting-approval,awaiting,work-in-progress"
-          # only-labels:'bug,enhancement'
-          days-before-issue-stale: 10days-before-pr-stale:10
-          days-before-issue-close: 5days-before-pr-close: -1
-          operations-per-run: 500
+          # only-labels: 'bug,enhancement'
+          days-before-issue-stale: 10
+          days-before-pr-stale: 10
+          days-before-issue-close: 5
+          days-before-pr-close: -1
+          operations-per-run:500
 
-      - name: Delete workflow runsuses: Mattraks/delete-workflow-runs@v2.0.6
-        with:token: ${{ github.token }}repository: ${{ github.repository }}retain_days:0
-          keep_minimum_runs:0
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@v2.0.6
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 0
+          keep_minimum_runs: 0
