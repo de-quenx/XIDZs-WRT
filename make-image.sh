@@ -21,13 +21,39 @@ block-mount cgi-io dnsmasq-full rpcd rpcd-mod-file rpcd-mod-iwinfo rpcd-mod-luci
 rpcd-mod-rrdns uhttpd uhttpd-mod-ubus luci-base luci-compat luci luci-ssl \
 luci-mod-admin-full luci-mod-network luci-mod-status luci-mod-system luci-proto-ipv6 luci-proto-ppp"                                                                                   
 
-# Modem and UsbLAN Driver
+# USB Core and Base Drivers
+PACKAGES+=" kmod-usb-ohci kmod-usb-uhci kmod-usb2 kmod-usb-ehci kmod-usb3 kmod-usb-storage kmod-usb-storage-uas kmod-nls-utf8 usbutils"
+
+# USB Serial Drivers
+PACKAGES+=" kmod-usb-serial kmod-usb-serial-option kmod-usb-serial-sierrawireless kmod-usb-serial-qualcomm kmod-usb-serial-wwan"
+
+# USB Network Base Drivers
+PACKAGES+=" kmod-mii kmod-usb-net kmod-usb-wdm kmod-usb-acm"
+
+# USB Network Specific Drivers
 PACKAGES+=" kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb-net-asix-ax88179"
-PACKAGES+=" kmod-mii kmod-usb-net kmod-usb-wdm kmod-usb-acm kmod-usb-net-cdc-ncm kmod-usb-net-huawei-cdc-ncm kmod-usb-net-cdc-ether \
-usb-modeswitch kmod-usb-net-rndis kmod-usb-net-sierrawireless kmod-usb-net-qmi-wwan uqmi kmod-usb-net-cdc-mbim umbim \
-kmod-usb-serial kmod-usb-serial-option kmod-usb-serial-sierrawireless kmod-usb-serial-qualcomm kmod-usb-serial-wwan libqmi qmi-utils \
-libmbim mbim-utils modemmanager luci-proto-modemmanager luci-proto-qmi xmm-modem kmod-usb-ohci kmod-usb-uhci \
-kmod-usb2 kmod-usb-ehci kmod-usb3 kmod-usb-storage kmod-usb-storage-uas kmod-nls-utf8 kmod-macvlan usbutils"
+PACKAGES+=" kmod-usb-net-cdc-ether kmod-usb-net-cdc-ncm kmod-usb-net-huawei-cdc-ncm kmod-usb-net-rndis kmod-usb-net-sierrawireless"
+
+# Modem Specific Drivers
+PACKAGES+=" kmod-usb-net-qmi-wwan kmod-usb-net-cdc-mbim"
+
+# USB Mode Switch
+PACKAGES+=" usb-modeswitch"
+
+# Modem Libraries and Utilities
+PACKAGES+=" libqmi qmi-utils libmbim mbim-utils"
+
+# QMI and MBIM Tools
+PACKAGES+=" uqmi umbim"
+
+# ModemManager and Protocols
+PACKAGES+=" modemmanager luci-proto-modemmanager luci-proto-qmi"
+
+# XMM Modem Support
+PACKAGES+=" xmm-modem"
+
+# Additional Network Tools
+PACKAGES+=" kmod-macvlan"
 
 # Modem Tools
 PACKAGES+=" modeminfo luci-app-modeminfo atinout modemband luci-app-modemband luci-app-mmconfig sms-tool luci-app-sms-tool-js luci-app-3ginfo-lite picocom minicom"
