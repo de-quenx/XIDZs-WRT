@@ -51,6 +51,16 @@ on:
           - Amlogic s912 Nexbox-A1-A95X
           - Amlogic s912 Nexbox-A95X-A2
           - Amlogic s922x GT-King-Pro
+          - Amlogic B860Hv5
+          - Amlogic HG680-FJ
+          - Amlogic Advan
+          - Allwinner H5 Orange Pi Zero Plus
+          - Allwinner H5 Orange Pi Zero Plus2
+          - Allwinner H6 Orange Pi 3
+          - Allwinner H6 Orange Pi 3 LTS
+          - Allwinner H616 Orange Pi Zero2
+          - Allwinner H618 Orange Pi Zero3
+          - Rockchip rk3566 Orange Pi 3B
           - Firefly-RK3328
           - RK3318-BOX
       tunnel:
@@ -137,7 +147,17 @@ jobs:
               "Amlogic s912 Nexbox-A95X-A2",
               "Amlogic s922x GT-King-Pro",
               "Firefly-RK3328",
-              "RK3318-BOX"
+              "RK3318-BOX",
+              "Amlogic B860Hv5",
+              "Amlogic HG680-FJ",
+              "Amlogic Advan",
+              "Allwinner H5 Orange Pi Zero Plus",
+              "Allwinner H5 Orange Pi Zero Plus2",
+              "Allwinner H6 Orange Pi 3",
+              "Allwinner H6 Orange Pi 3 LTS",
+              "Allwinner H616 Orange Pi Zero2",
+              "Allwinner H618 Orange Pi Zero3",
+              "Rockchip rk3566 Orange Pi 3B"
             ]
           }
           EOJ
@@ -155,9 +175,6 @@ jobs:
         id: setupenv
         run: |
           sudo timedatectl set-timezone "${{ env.TZ }}"
-
-          TYPE="MULTI"
-          echo "type=$TYPE" >> $GITHUB_OUTPUT
 
           BASE="${RELEASE_BRANCH%:*}"
           BRANCH="${RELEASE_BRANCH#*:}"
@@ -324,6 +341,7 @@ jobs:
           echo "ARCH_1=arm64" >> $GITHUB_ENV
           echo "ARCH_2=aarch64" >> $GITHUB_ENV
           echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
+          echo "TYPE=$Type" >> $GITHUB_ENV
 
           # Device mapping function
           get_device_config() {
@@ -374,7 +392,7 @@ jobs:
           }
 
           # Get device configuration
-          read TARGET_BUILD KERNEL REPACK_TYPE <<< "$(get_device_config "$MATRIXTARGET")"
+          read TARGET_BUILD KERNEL TYPE <<< "$(get_device_config "$MATRIXTARGET")"
 
           if [ -z "$TARGET_BUILD" ]; then
             echo "Error: Unknown device $MATRIXTARGET"
@@ -383,12 +401,12 @@ jobs:
 
           echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
           echo "KERNEL=$KERNEL" >> $GITHUB_ENV
-          echo "REPACK_TYPE=$REPACK_TYPE" >> $GITHUB_ENV
+          echo "TYPE=$TYPE" >> $GITHUB_ENV
           
           echo "Device: $MATRIXTARGET"
           echo "Target Build: $TARGET_BUILD"
           echo "Kernel: $KERNEL"
-          echo "Repack Type: $REPACK_TYPE"
+          echo "Type: $TYPE"
           echo "Target System: $TARGET_SYSTEM"
           echo "Target Name: $TARGET_NAME"
           echo "Profile: $PROFILE"
@@ -492,7 +510,7 @@ jobs:
         run: |
           cd ${WORKING_DIR}
           chmod +x scripts/REPACKWRT.sh
-          ./scripts/REPACKWRT.sh "$REPACK_TYPE" "$TARGET_BUILD" "$KERNEL" "${{ env.TUNNEL }}"
+          ./scripts/REPACKWRT.sh "$TYPE" "$TARGET_BUILD" "$KERNEL" "${{ env.TUNNEL }}"
           echo "status=success" >> $GITHUB_OUTPUT
           
       - name: Mod SDCard
