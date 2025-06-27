@@ -368,16 +368,16 @@ jobs:
               echo "PROFILE=rpi" >> $GITHUB_ENV
               echo "TARGET_SYSTEM=bcm27xx/bcm2708" >> $GITHUB_ENV
               echo "TARGET_NAME=bcm27xx-bcm2708" >> $GITHUB_ENV
-              echo "ARCH_1=arm" >> $GITHUB_ENV
-              echo "ARCH_2=armv6" >> $GITHUB_ENV
+              echo "ARCH_1=armv6" >> $GITHUB_ENV
+              echo "ARCH_2=arm" >> $GITHUB_ENV
               echo "ARCH_3=arm_arm1176jzf-s_vfp" >> $GITHUB_ENV
               ;;
             "Raspberry Pi 2B")
               echo "PROFILE=rpi-2" >> $GITHUB_ENV
               echo "TARGET_SYSTEM=bcm27xx/bcm2709" >> $GITHUB_ENV
               echo "TARGET_NAME=bcm27xx-bcm2709" >> $GITHUB_ENV
-              echo "ARCH_1=arm" >> $GITHUB_ENV
-              echo "ARCH_2=arm7" >> $GITHUB_ENV
+              echo "ARCH_1=arm7" >> $GITHUB_ENV
+              echo "ARCH_2=arm" >> $GITHUB_ENV
               echo "ARCH_3=arm_cortex-a7_neon-vfpv4" >> $GITHUB_ENV
               ;;
             "Raspberry Pi 3B")
