@@ -409,7 +409,7 @@ jobs:
               echo "TARGET_SYSTEM=x86/generic" >> $GITHUB_ENV
               echo "TARGET_NAME=x86-generic" >> $GITHUB_ENV
               echo "ARCH_1=386" >> $GITHUB_ENV
-              echo "ARCH_2=i386" >> $GITHUB_ENV
+              echo "ARCH_2=i686" >> $GITHUB_ENV
               echo "ARCH_3=i386_pentium4" >> $GITHUB_ENV
               ;;
           esac
