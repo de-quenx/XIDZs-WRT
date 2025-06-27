@@ -376,7 +376,7 @@ jobs:
               echo "PROFILE=rpi-2" >> $GITHUB_ENV
               echo "TARGET_SYSTEM=bcm27xx/bcm2709" >> $GITHUB_ENV
               echo "TARGET_NAME=bcm27xx-bcm2709" >> $GITHUB_ENV
-              echo "ARCH_1=arm7" >> $GITHUB_ENV
+              echo "ARCH_1=armv7" >> $GITHUB_ENV
               echo "ARCH_2=arm" >> $GITHUB_ENV
               echo "ARCH_3=arm_cortex-a7_neon-vfpv4" >> $GITHUB_ENV
               ;;
