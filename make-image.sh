@@ -36,12 +36,14 @@ PASSWALL="chinadns-ng resolveip dns2socks dns2tcp ipt2socks microsocks tcping xr
 # Function to add requested tunnel packages
 add_tunnel_packages() {
     local option="$1"
+    
     case "$option" in
         "openclash")
             PACKAGES+=" $OPENCLASH"
             ;;
         "openclash-nikki")
-            PACKAGES+=" $OPENCLASH $NIKKI";;
+            PACKAGES+=" $OPENCLASH $NIKKI"
+            ;;
         "openclash-nikki-passwall")
             PACKAGES+=" $OPENCLASH $NIKKI $PASSWALL"
             ;;
