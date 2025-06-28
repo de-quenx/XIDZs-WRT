@@ -109,8 +109,11 @@ build_firmware() {
     local profile=$1
     local tunnel_option=$2
 
-    log "INFO" "Memulai build untuk profil: $profile"handle_profile_packages "$profile"handle_tunnel_option "$tunnel_option"
+    log "INFO" "Memulai build untuk profil: $profile"
+    handle_profile_packages "$profile"
+    handle_tunnel_option "$tunnel_option"
     handle_release_packages
+    
     # Custom Files
     FILES="files"
     
@@ -122,3 +125,10 @@ build_firmware() {
         log "ERROR" "Build gagal. Periksa log untuk detail."
     fi
 }
+
+# Main script execution
+if [ -z "$1" ]; then
+    log "ERROR" "Profile not specified"
+fi
+
+build_firmware "$1" "$2"
