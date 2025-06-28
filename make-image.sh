@@ -17,7 +17,7 @@ PACKAGES+=" kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb
 PACKAGES+=" kmod-mii kmod-usb-net kmod-usb-wdm kmod-usb-net-rndis kmod-usb-net-sierrawireless kmod-usb-net-qmi-wwan uqmi \
 kmod-usb-net-cdc-ether usb-modeswitch kmod-usb-acm kmod-usb-net-huawei-cdc-ncm kmod-usb-net-cdc-ncm \
 kmod-usb-net-cdc-mbim umbim kmod-usb-serial-option kmod-usb-serial kmod-usb-serial-wwan kmod-usb-serial-qualcomm mbim-utils qmi-utils \
-libqmi libmbim luci-proto-qmi modemmanager luci-proto-modemmanager xmm-modem usbutils \
+libqmi libmbim modemmanager luci-proto-modemmanager luci-proto-qmi xmm-modem usbutils \
 kmod-usb-uhci kmod-usb-ohci kmod-usb2 kmod-usb-ehci kmod-usb3 kmod-macvlan"
 
 # Modem Tools
