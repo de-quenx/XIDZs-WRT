@@ -90,38 +90,33 @@ handle_release_packages() {
     elif [ "${BASE}" == "immortalwrt" ]; then
         MISC+=" wpad-openssl iw iwinfo wireless-regdb kmod-cfg80211 kmod-mac80211"
         EXCLUDED+=" -dnsmasq -cpusage -automount -libustream-openssl -default-settings-chn -luci-i18n-base-zh-cn"
-        if [ "$ARCH_2" == "x86_64" ]; then
-            EXCLUDED+=" -kmod-usb-net-rtl8152-vendor"
+        if [ "$ARCH_2" == "x86_64"]; then
+        EXCLUDED+=" -kmod-usb-net-rtl8152-vendor"
         fi
     fi
 }
 
-# Add paket misc umum
-MISC+=" adb parted losetup resize2fs block-mount coreutils-base64 coreutils-stty coreutils-stat coreutils-sleep \
-htop bash curl wget-ssl tar unzip jq httping screen lolcat \
-uhttpd uhttpd-mod-ubus python3-pip zram-swap luci-app-poweroffdevice luci-app-ramfree luci-app-ttyd \
-luci-app-lite-watchdog luci-app-ipinfo luci-app-droidnet luci-app-mactodong luci-app-tinyfm"
+MISC+=" coreutils-base64 coreutils-sleep coreutils-stat coreutils-stty block-mount losetup parted resize2fs \
+bash luci luci-ssl uhttpd uhttpd-mod-ubus curl wget-ssl tar unzip jq httping python3-pip zram-swap \
+adb htop screen lolcat luci-app-poweroffdevice luci-app-ramfree luci-app-ttyd luci-app-lite-watchdog \
+luci-app-ipinfo luci-app-droidnet luci-app-mactodong luci-app-tinyfm"
+
+# Tambahkan paket MISC ke PACKAGES
+PACKAGES+="$MISC"
 
 # Main Build Function
 build_firmware() {
     local profile=$1
     local tunnel_option=$2
 
-    log "INFO" "Memulai build untuk profil: $profile"
-    
-    handle_profile_packages "$profile"
-    handle_tunnel_option "$tunnel_option"
+    log "INFO" "Memulai build untuk profil: $profile"handle_profile_packages "$profile"handle_tunnel_option "$tunnel_option"
     handle_release_packages
-
-    # Tambahkan paket MISC ke PACKAGES
-    PACKAGES+="$MISC"
-    
     # Custom Files
     FILES="files"
     
     make image PROFILE="$profile" PACKAGES="$PACKAGES $EXCLUDED" FILES="$FILES" 2>&1
     
-    if [ ${PIPESTATUS[0]} -eq 0 ]; then
+    if [ ${PIPESTATUS[0]} -eq 0]; then
         log "INFO" "Build Selesai dengan Sukses!"
     else
         log "ERROR" "Build gagal. Periksa log untuk detail."
