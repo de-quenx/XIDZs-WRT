@@ -96,11 +96,14 @@ handle_release_packages() {
     fi
 }
 
-# Tambahkan paket misc umum
+# Add paket misc umum
 MISC+=" adb parted losetup resize2fs block-mount coreutils-base64 coreutils-stty coreutils-stat coreutils-sleep \
 htop bash curl wget-ssl tar unzip jq httping screen lolcat \
 uhttpd uhttpd-mod-ubus python3-pip zram-swap luci-app-poweroffdevice luci-app-ramfree luci-app-ttyd \
 luci-app-lite-watchdog luci-app-ipinfo luci-app-droidnet luci-app-mactodong luci-app-tinyfm"
+
+# Tambahkan paket MISC ke PACKAGES
+PACKAGES+="$MISC"
 
 # Main Build Function
 build_firmware() {
@@ -113,9 +116,6 @@ build_firmware() {
     handle_tunnel_option "$tunnel_option"
     handle_release_packages
     
-    # Tambahkan paket MISC ke PACKAGES
-    PACKAGES+="$MISC"
-    
     # Custom Files
     FILES="files"
     
@@ -127,10 +127,3 @@ build_firmware() {
         log "ERROR" "Build gagal. Periksa log untuk detail."
     fi
 }
-
-# Eksekusi script utama
-if [ -z "$1" ]; then
-    log "ERROR" "Profil tidak ditentukan"
-fi
-
-build_firmware "$1" "$2"
