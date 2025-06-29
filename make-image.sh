@@ -75,14 +75,13 @@ EXCLUDED=""
 # Add hardware-specific packages based on profile
 configure_profile_packages() {
     local profile_name="$1"
-    
     # Add Raspberry Pi specific packages
     if [ "$profile_name" == "rpi-4" ]; then
         misc+=" kmod-i2c-bcm2835 i2c-tools kmod-i2c-core kmod-i2c-gpio"
     fi
     
-    # Add x86_64 specific packages
-    if [ "$ARCH_2" == "x86_64" ]; then
+    # Add x86 specific packages
+    if [ "$ARCH_2" == "x86_64" ] || [ "$ARCH_3" == "i386_pentium4" ]; then
         misc+=" kmod-iwlwifi iw-full pciutils"
     fi
     
@@ -104,20 +103,18 @@ configure_release_packages() {
     elif [ "${BASE}" == "immortalwrt" ]; then
         misc+=" wpad-openssl iw iwinfo wireless-regdb kmod-cfg80211 kmod-mac80211"
         EXCLUDED+=" -dnsmasq -cpusage -automount -libustream-openssl -default-settings-chn -luci-i18n-base-zh-cn"
-        if [ "$ARCH_2" == "x86_64" ]; then
-            EXCLUDED+=" -kmod-usb-net-rtl8152-vendor"
-        elif [ "$ARCH_3" == "i386_pentium4" ]; then
-            EXCLUDED+=" -kmod-usb-net-rtl8152-vendor"
+        if [ "$ARCH_2" == "x86_64" ] || [ "$ARCH_3" == "i386_pentium4" ]; then
+        EXCLUDED+=" -kmod-usb-net-rtl8152-vendor"
         fi
     fi
+    
+    # Common utility packages - moved here to be added after base release specific packages
+    misc+=" adb bash block-mount coreutils-base64 coreutils-sleep coreutils-stat coreutils-stty curl"
+    misc+=" htop httping jq libc losetup lolcat luci luci-ssl parted python3-pip"
+    misc+=" resize2fs screen tar uhttpd uhttpd-mod-ubus unzip wget-ssl zram-swap"
+    misc+=" luci-app-droidnet luci-app-ipinfo luci-app-lite-watchdog luci-app-mactodong"
+    misc+=" luci-app-poweroffdevice luci-app-ramfree luci-app-tinyfm luci-app-ttyd luci-app-3ginfo-lite luci-app-mmconfig"
 }
-
-# Common utility packages
-misc+=" adb bash block-mount coreutils-base64 coreutils-sleep coreutils-stat coreutils-stty curl"
-misc+=" htop httping jq libc losetup lolcat luci luci-ssl parted python3-pip"
-misc+=" resize2fs screen tar uhttpd uhttpd-mod-ubus unzip wget-ssl zram-swap"
-misc+=" luci-app-droidnet luci-app-ipinfo luci-app-lite-watchdog luci-app-mactodong"
-misc+=" luci-app-poweroffdevice luci-app-ramfree luci-app-tinyfm luci-app-ttyd luci-app-3ginfo-lite luci-app-mmconfig"
 
 # Main firmware build function
 build_firmware() {
@@ -133,7 +130,7 @@ build_firmware() {
     
     make image PROFILE="$target_profile" PACKAGES="$PACKAGES $EXCLUDED" FILES="$build_files" 2>&1
     local build_status=${PIPESTATUS[0]}
-    if [ $build_status -eq 0 ]; then
+    if [ $build_status -eq0 ]; then
         log "SUCCESS" "Build completed successfully!"
     else
         log "ERROR" "Build failed with exit code $build_status"
@@ -143,8 +140,8 @@ build_firmware() {
 
 # Validate arguments
 if [ -z "$1" ]; then
-    log "ERROR" "Profile not specified. Usage: $0 <profile> [tunnel_option]"
-    exit1
+    log "ERROR" "Profile not specified. Usage: $0<profile> [tunnel_option]"
+    exit 1
 fi
 
 # Execute the build with provided arguments
