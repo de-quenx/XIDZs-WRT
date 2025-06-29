@@ -58,7 +58,7 @@ else
     log_status "ERROR" "Failed to modify firmware display"
 fi
 
-check_status "sed -i -E 's|icons/port_%s.png|icons/port_%s.gif|g' /www/luci-static/resources/view/status/include/29_ports.js" "Port icons changed from PNG to GIF"
+check_status "sed -i -E 's|icons/port_%s.png|icons/port_%s.gif|g' /www/luci-static/resources/view/status/include/11_ports.js" "Port icons changed from PNG to GIF"
 
 # Check system release
 log_status "INFO" "Checking system release..."
@@ -109,11 +109,14 @@ check_status "uci set network.tethering.device='usb0'" "Tethering device set to 
 check_status "uci set network.modem=interface" "Modem interface created"
 check_status "uci set network.modem.proto='dhcp'" "Modem protocol set to DHCP"
 check_status "uci set network.modem.device='eth1'" "Modem device set to eth1"
+check_status "uci set network.wan=interface" "Wan interface created"
+check_status "uci set network.wan.proto='dhcp'" "Wan protocol set to DHCP"
+check_status "uci set network.wan.device='wwan0'" "Wan device set to wwan0"
 check_status "uci delete network.wan6" "delete wan6"
 check_status "uci commit network" "Network configuration committed"
 
 log_status "INFO" "Configuring firewall..."
-check_status "uci set firewall.@zone[1].network='tethering modem'" "Firewall zone configured for TETHERING and MODEM"
+check_status "uci set firewall.@zone[1].network='tethering modem wan'" "Firewall zone configured for TETHERING MODEM WAN"
 check_status "uci commit firewall" "Firewall configuration committed"
 
 # disable ipv6 lan
