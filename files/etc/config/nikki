@@ -65,13 +65,13 @@ config mixin 'mixin'
 	list fake_ip_filters '+.local'
 	option fake_ip_cache '1'
 	option hosts '0'
-	option dns_nameserver '1'
+	option dns_nameserver '0'
 	option dns_nameserver_policy '0'
 	option sniffer_force_domain_name '0'
 	option sniffer_ignore_domain_name '0'
 	option sniffer_sniff '1'
-	option rule '1'
-	option rule_provider '1'
+	option rule '0'
+	option rule_provider '0'
 	option mixin_file_content '0'
 	option mixin_file_content '0'
 	option outbound_interface 'wan'
@@ -128,6 +128,16 @@ config router_access_control
 config lan_access_control
 	option enabled '1'
 	option proxy '1'
+
+config routing 'routing'
+	option tproxy_fw_mark '0x80'
+	option tun_fw_mark '0x81'
+	option tproxy_rule_pref '1024'
+	option tun_rule_pref '1025'
+	option tproxy_route_table '80'
+	option tun_route_table '81'
+	option cgroup_id '0x12061206'
+	option cgroup_name 'nikki'
 
 config authentication
 	option enabled '0'
@@ -201,16 +211,6 @@ config sniff
 	list port '8443'
 	option overwrite_destination '1'
 
-config editor editor
+config editor 'editor'
 
-config log log
-
-config routing routing
-	option tproxy_fw_mark '0x80'
-	option tun_fw_mark '0x81'
-	option tproxy_rule_pref '1024'
-	option tun_rule_pref '1025'
-	option tproxy_route_table '80'
-	option tun_route_table '81'
-	option cgroup_id '0x12061206'
-	option cgroup_name 'nikki'
+config log 'log'
