@@ -130,7 +130,7 @@ build_firmware() {
     
     make image PROFILE="$target_profile" PACKAGES="$PACKAGES $EXCLUDED" FILES="$build_files" 2>&1
     local build_status=${PIPESTATUS[0]}
-    if [ $build_status -eq0 ]; then
+    if [ $build_status -eq 0 ]; then
         log "SUCCESS" "Build completed successfully!"
     else
         log "ERROR" "Build failed with exit code $build_status"
@@ -140,7 +140,7 @@ build_firmware() {
 
 # Validate arguments
 if [ -z "$1" ]; then
-    log "ERROR" "Profile not specified. Usage: $0<profile> [tunnel_option]"
+    log "ERROR" "Profile not specified. Usage: $0 <profile> [tunnel_option]"
     exit 1
 fi
 
