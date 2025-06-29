@@ -10,8 +10,10 @@ on:
         type: choice
         options:
           - openwrt:24.10.2
+          - openwrt:24.10.1
           - openwrt:23.05.5
           - immortalwrt:24.10.2
+          - immortalwrt:24.10.1
           - immortalwrt:23.05.4
       target:
         description: "Select device board"
@@ -202,7 +204,7 @@ jobs:
             - Default username: root
             - Default password: xyyraa
             - Default WIFI: XIDZs-WRT | XIDZs-WRT_5G
-            
+            - Default WIFI Password: None         
             ## Supported Devices ##
             ## Amlogic Series
             - **S905**: MXQ-Pro+
@@ -218,7 +220,7 @@ jobs:
             - **S912**: Nexbox-A1-A95X, Nexbox-A95X-A2
             - **S905X2**: B860Hv5, HG680-FJ, X96Max variants
             - **S905X3**: HK1-Vontar-X3, X96Air variants, X96Max+ variants
-            - **S905X4**: Advan
+            - **S905X4**: Advan AT01, Akari AX810
             - **S922X**: GT-King-Pro
             
             ## Rockchip Series
@@ -241,10 +243,10 @@ jobs:
             - OpenClash + Nikki
             - OpenClash + Nikki + Passwall
             - No Tunnel         
-            ## KERNEL SUPPORT
-            - Kernel v5.15 ⨯ WIFI ON
-            - Kernel v6.1 ⨯ WIFI ON
-            - Kernel v6.6 ⨯ WIFI ON
+            ## KERNEL STABLE VERSION
+            - Kernel v5.15 ⨯ WIFI ON [ BH - HG ]
+            - Kernel v6.1 ⨯ WIFI ON [ BH - HG ]
+            - Kernel v6.6 ⨯ WIFI ON [ BH - HG ]
             - Kernel v6.12 ⨯ WIFI OFF
 
   build-firmware:
@@ -592,7 +594,7 @@ jobs:
           # Move and rename output files
           for file in bin/targets/"${TARGET_SYSTEM}"/*-rootfs.tar.gz; do
             if [ -f "$file" ]; then
-              new_name="XIDZ-WRT_$(basename "$file" -rootfs.tar.gz)_${{ env.TUNNEL }}-rootfs.tar.gz"
+              new_name="XIDZs-WRT-$(basename "$file" -rootfs.tar.gz)_${{ env.TUNNEL }}-rootfs.tar.gz"
               mv "$file" compiled_images/$new_name
             fi
           done
