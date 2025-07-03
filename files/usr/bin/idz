@@ -1,0 +1,248 @@
+#!/bin/bash
+
+# Set locale dan encoding yang aman
+export LC_ALL=C
+export LANG=C
+
+# Fungsi untuk deteksi ukuran terminal dan mode
+detect_terminal_mode() {
+    terminal_width=$(stty size 2>/dev/null | awk '{print $2}' || echo "80")
+    terminal_height=$(stty size 2>/dev/null | awk '{print $1}' || echo "24")
+    
+    # Deteksi mode berdasarkan lebar terminal
+    if [ "$terminal_width" -lt 80 ]; then
+        MODE="mobile"
+    else
+        MODE="desktop"
+    fi
+}
+
+# Fungsi update yang diperbaiki
+silent_update() {
+    local LOCAL_SCRIPT="/usr/bin/idz"
+    local TEMP_FILE="/tmp/idz_update"
+    
+    update_local_script() {
+        if [ -f "$TEMP_FILE" ]; then
+            local LOCAL_HASH=$(md5sum "$LOCAL_SCRIPT" 2>/dev/null | cut -d' ' -f1)
+            local TEMP_HASH=$(md5sum "$TEMP_FILE" 2>/dev/null | cut -d' ' -f1)
+            
+            if [ "$LOCAL_HASH" != "$TEMP_HASH" ]; then
+                cp "$LOCAL_SCRIPT" "${LOCAL_SCRIPT}.bak" 2>/dev/null
+                mv "$TEMP_FILE" "$LOCAL_SCRIPT"
+                chmod +x "$LOCAL_SCRIPT"
+            else
+                rm -f "$TEMP_FILE"
+            fi
+        fi
+    }
+    
+    update_local_script
+    clear
+}
+
+# Inisialisasi
+detect_terminal_mode
+silent_update
+
+#####################################################
+# Logo Linux ASCII - Tux Penguin
+linux_logo="
+       .--.
+      |o_o |
+      |:_/ |
+     //   \ \\
+    (|     | )
+   /'\_   _/\`\\
+   \___)=(___/
+"
+
+# Fungsi untuk format memori dalam GB (per 1000MB)
+format_memory() {
+    local kb_value="$1"
+    local mb_value=$((kb_value / 1024))
+    
+    # Jika lebih dari atau sama dengan 1000MB, tampilkan dalam GB
+    if [ "$mb_value" -ge 1000 ]; then
+        local gb_value=$(awk "BEGIN {printf \"%.1f\", $mb_value/1000}")
+        echo "${gb_value}GB"
+    else
+        echo "${mb_value}MB"
+    fi
+}
+
+# Fungsi untuk format storage dalam MB/GB
+format_storage() {
+    local kb_value="$1"
+    local mb_value=$((kb_value / 1024))
+    
+    # Jika lebih dari atau sama dengan 1000MB, tampilkan dalam GB
+    if [ "$mb_value" -ge 1000 ]; then
+        local gb_value=$(awk "BEGIN {printf \"%.1f\", $mb_value/1000}")
+        echo "${gb_value}GB"
+    else
+        echo "${mb_value}MB"
+    fi
+}
+
+# Fungsi untuk mendapatkan informasi sistem
+get_system_info() {
+    # Deteksi OS dari /etc/openwrt_release
+    os=$(grep 'DISTRIB_DESCRIPTION' /etc/openwrt_release | cut -d "'" -f 2 2>/dev/null || echo "Unknown Linux")
+    [ -z "$os" ] && os="Unknown Linux"
+    
+    # Deteksi model dari /proc/device-tree/model
+    host=$(cat /proc/device-tree/model 2>/dev/null | tr -d '\0' || hostname 2>/dev/null || echo "Unknown")
+    [ -z "$host" ] && host="Unknown"
+    
+    # Deteksi kernel dengan uname -r
+    kernel=$(uname -r 2>/dev/null || echo "Unknown")
+    [ -z "$kernel" ] && kernel="Unknown"
+    
+    # Deteksi CPU dari /proc/cpuinfo
+    cpu_model=$(awk -F ': ' '/model name/ { print $2; exit }' /proc/cpuinfo 2>/dev/null || echo "Unknown")
+    [ -z "$cpu_model" ] && cpu_model="Unknown"
+    
+    # Informasi uptime
+    uptime=$(awk '{
+        days=int($1/86400)
+        hours=int($1%86400/3600)
+        minutes=int(($1%3600)/60)
+        if(days>0) printf "%d days, %d hours", days, hours
+        else if(hours>0) printf "%d hours, %d minutes", hours, minutes
+        else printf "%d minutes", minutes
+    }' /proc/uptime 2>/dev/null || echo "Unknown")
+    [ -z "$uptime" ] && uptime="Unknown"
+    
+    # Deteksi temperature CPU
+    cpu_temp=$(cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | awk '{print $1/1000"°C"; exit}' || echo "N/A")
+    [ -z "$cpu_temp" ] && cpu_temp="N/A"
+    
+    # Informasi memori dengan format GB (per 1000MB)
+    mem_info="Unknown"
+    if [ -f /proc/meminfo ]; then
+        mem_total_kb=$(awk '/MemTotal/ {print $2}' /proc/meminfo 2>/dev/null)
+        mem_available_kb=$(awk '/MemAvailable/ {print $2}' /proc/meminfo 2>/dev/null)
+        
+        if [ -z "$mem_available_kb" ]; then
+            mem_free_kb=$(awk '/MemFree/ {print $2}' /proc/meminfo 2>/dev/null)
+            mem_cached_kb=$(awk '/Cached/ {print $2}' /proc/meminfo 2>/dev/null)
+            mem_available_kb=$((mem_free_kb + mem_cached_kb))
+        fi
+        
+        if [ -n "$mem_total_kb" ] && [ "$mem_total_kb" -gt 0 ] 2>/dev/null; then
+            mem_used_kb=$((mem_total_kb - mem_available_kb))
+            mem_percent=$(awk "BEGIN {printf \"%.0f\", ($mem_used_kb/$mem_total_kb*100)}")
+            
+            # Format memory menggunakan fungsi format_memory
+            mem_used_formatted=$(format_memory "$mem_used_kb")
+            mem_total_formatted=$(format_memory "$mem_total_kb")
+            
+            mem_info="${mem_used_formatted}/${mem_total_formatted} (${mem_percent}%)"
+        fi
+    fi
+    
+    # Informasi RootFS
+    rootfs_info="Unknown"
+    if command -v df >/dev/null 2>&1; then
+        # Cari mount point root (/)
+        rootfs_data=$(df / 2>/dev/null | tail -n 1)
+        if [ -n "$rootfs_data" ]; then
+            # Ekstrak informasi dari df output
+            rootfs_total_kb=$(echo "$rootfs_data" | awk '{print $2}')
+            rootfs_used_kb=$(echo "$rootfs_data" | awk '{print $3}')
+            rootfs_available_kb=$(echo "$rootfs_data" | awk '{print $4}')
+            rootfs_percent=$(echo "$rootfs_data" | awk '{print $5}' | tr -d '%')
+            
+            if [ -n "$rootfs_total_kb" ] && [ "$rootfs_total_kb" -gt 0 ] 2>/dev/null; then
+                # Format storage menggunakan fungsi format_storage
+                rootfs_used_formatted=$(format_storage "$rootfs_used_kb")
+                rootfs_total_formatted=$(format_storage "$rootfs_total_kb")
+                
+                rootfs_info="${rootfs_used_formatted}/${rootfs_total_formatted} (${rootfs_percent}%)"
+            fi
+        fi
+    fi
+    
+    # Deteksi packages (untuk OpenWrt)
+    packages=$(opkg list-installed 2>/dev/null | wc -l || echo "N/A")
+}
+
+# Fungsi untuk menampilkan logo dan info secara berdampingan
+display_logo_and_info() {
+    echo
+    printf "\033[1;34m"
+    for i in {1..65}; do printf "="; done
+    printf "\033[0m\n"
+    
+    # Dapatkan informasi sistem
+    get_system_info
+    
+    # Konversi logo ke array
+    IFS=$'\n' read -d '' -r -a logo_lines <<< "$linux_logo"
+    
+    # Informasi sistem dalam array - tanpa shell
+    info_lines=(
+        "OS: $os"
+        "Host: $host"
+        "Kernel: $kernel"
+        "Uptime: $uptime"
+        "CPU: $cpu_model"
+        "Temperature: $cpu_temp"
+        "Memory: $mem_info"
+        "RootFS: $rootfs_info"
+        "Packages: $packages"
+    )
+    
+    # Tentukan jumlah baris maksimum
+    max_lines=${#logo_lines[@]}
+    if [ ${#info_lines[@]} -gt $max_lines ]; then
+        max_lines=${#info_lines[@]}
+    fi
+    
+    # Tampilkan logo dan info berdampingan
+    for ((i=0; i<max_lines; i++)); do
+        # Tampilkan logo (kolom kiri)
+        if [ $i -lt ${#logo_lines[@]} ]; then
+            logo_line="${logo_lines[$i]}"
+            # Warnai logo dengan hijau untuk Linux, kecuali "Mufid Kholiq" dengan warna kuning
+            if [[ "$logo_line" == *"Mufid Kholiq"* ]]; then
+                printf "\033[1;33m%-22s\033[0m" "$logo_line"
+            else
+                printf "\033[1;32m%-22s\033[0m" "$logo_line"  # Hijau untuk Tux
+            fi
+        else
+            printf "%-22s" ""
+        fi
+        
+        # Tampilkan info (kolom kanan)
+        if [ $i -lt ${#info_lines[@]} ]; then
+            info_line="${info_lines[$i]}"
+            # Warnai info sistem dengan cyan, kecuali RootFS dengan warna hijau
+            if [[ "$info_line" == *"RootFS:"* ]]; then
+                printf "\033[1;32m%s\033[0m" "$info_line"  # Hijau untuk RootFS
+            else
+                printf "\033[1;36m%s\033[0m" "$info_line"  # Cyan untuk info lainnya
+            fi
+        fi
+        
+        echo
+    done
+    
+    echo
+    printf "\033[1;34m"
+    for i in {1..65}; do printf "="; done
+    printf "\033[0m\n"
+}
+
+# Fungsi utama
+main_display() {
+    detect_terminal_mode
+    display_logo_and_info
+}
+
+####################################################
+# EKSEKUSI UTAMA
+
+clear
+main_display

@@ -1,0 +1,50 @@
+# Modification By @xidz_x # Full Rule Simole #
+proxies:
+- name: NL
+  server: server.com
+  port: 443
+  type: vless
+  uuid: e12f52cd-7e50-4fdd-97d0-809d658d9926
+  alterId: 0
+  cipher: auto
+  tls: true
+  skip-cert-verify: true
+  servername: bug.com
+  network: ws
+  ws-opts:
+    path: /vless-ws
+    headers:
+      Host: server.com
+  udp: true
+- name: AL
+  server: server.com
+  port: 443
+  type: vless
+  uuid: e12f52cd-7e50-4fdd-97d0-809d658d9926
+  alterId: 0
+  cipher: auto
+  tls: true
+  skip-cert-verify: true
+  servername: bug.com
+  network: ws
+  ws-opts:
+    path: /vless-ws
+    headers:
+      Host: server.com
+  udp: true
+- name: IT
+  server: server.com
+  port: 443
+  type: vless
+  uuid: e12f52cd-7e50-4fdd-97d0-809d658d9926
+  alterId: 0
+  cipher: auto
+  tls: true
+  skip-cert-verify: true
+  servername: bug.com
+  network: ws
+  ws-opts:
+    path: /vless-ws
+    headers:
+      Host: server.com
+  udp: true
