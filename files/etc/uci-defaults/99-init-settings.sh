@@ -317,7 +317,7 @@ for pkg in luci-app-openclash luci-app-nikki luci-app-passwall; do
         case "$pkg" in
             luci-app-openclash)
                 check_status "rm -f /etc/config/openclash1" "OpenClash backup config removed"
-                check_status "rm -rf /etc/openclash /usr/share/openclash /usr/lib/lua/luci/view/openclash" "OpenClash files and directories removed"
+                check_status "rm -rf /etc/openclash /usr/share/openclash" "OpenClash files and directories removed"
                 check_status "sed -i '104s/Enable/Disable/' /etc/config/alpha" "Alpha config updated (OpenClash disabled)"
                 check_status "sed -i '167s#.*#<!-- & -->#' /usr/lib/lua/luci/view/themes/argon/header.htm" "Argon header line 167 removed"
                 check_status "sed -i '187s#.*#<!-- & -->#' /usr/lib/lua/luci/view/themes/argon/header.htm" "Argon header line 187 removed"
