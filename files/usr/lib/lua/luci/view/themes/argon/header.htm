@@ -190,60 +190,68 @@ function updatemenu(){1==document.getElementById("responsive-menu").checked?(doc
 </nav>
 
 <script>
-    (function() {
-        'use strict';
-        
-        const { hostname } = window.location;
-        const baseUrl = `http://${hostname}:9090`;
-        
-        const elements = {
-            zash: document.getElementById("zash"),
-            yacd: document.getElementById("yacd")
-        };
-        
-        const urls = {
-            nikki: `${baseUrl}/ui/Nikki/`,
-            defaultZash: `${baseUrl}/ui/zashboard/`,
-            yacd: `${baseUrl}/ui/yacd/`
-        };
-        
-        function setZashLink(url, color, text) {
-            Object.assign(elements.zash, {
-                href: url,
-                textContent: text
-            });
-            elements.zash.style.color = color;
-        }
-        
-        function detectZashboard() {
-            // Set Yacd link immediately
-            elements.yacd.href = urls.yacd;
-            
-            // Test Nikki availability
+(async function () {
+    'use strict';
+
+    const { hostname } = window.location;
+    const baseUrl = `http://${hostname}:9090`;
+
+    const zash = document.getElementById("zash");
+    const yacd = document.getElementById("yacd");
+
+    const urls = {
+        openclashFavicon: `${baseUrl}/ui/openclash/favicon.ico`,
+        openclashLink: `${baseUrl}/ui/openclash/`,
+        nikkiFavicon: `${baseUrl}/ui/Nikki/favicon.ico`,
+        nikkiLink: `${baseUrl}/ui/Nikki/?host=${hostname}&hostname=${hostname}&port=9090`,
+        defaultLink: `${baseUrl}/ui/zashboard/`,
+        yacdLink: `${baseUrl}/ui/yacd/`
+    };
+
+    // Set Yacd link once
+    yacd.href = urls.yacdLink;
+
+    // Utility: check if image loads successfully
+    function checkService(url) {
+        return new Promise((resolve) => {
             const img = new Image();
-            
-            img.onload = () => {
-                setZashLink(
-                    `${urls.nikki}?host=${hostname}&hostname=${hostname}&port=9090`,
-                    "#ffd700",
-                    "Zash | Nikki"
-                );
-                console.log("Nikki Zashboard is running");
-            };
-            
-            img.onerror = () => {
-                setZashLink(urls.defaultZash, "#ffffff", "Zash");
-                console.log("Using default Zashboard");
-            };
-            
-            img.src = `${urls.nikki}favicon.ico?${Date.now()}`;
+            img.onload = () => resolve(true);
+            img.onerror = () => resolve(false);
+            img.src = `${url}?t=${Date.now()}`; // cache buster
+        });
+    }
+
+    // Update zash link, text and color
+    function updateZash(url, text, color) {
+        zash.href = url;
+        zash.textContent = text;
+        zash.style.color = color;
+    }
+
+    // Run detection sequence
+    async function detect() {
+        if (await checkService(urls.openclashFavicon)) {
+            updateZash(urls.openclashLink, "Zash | Oc", "#00fa9a");
+            console.log("OpenClash detected.");
+            return;
         }
-        
-        // Initialize when DOM is ready
-        document.readyState === 'loading' 
-            ? document.addEventListener('DOMContentLoaded', detectZashboard)
-            : detectZashboard();
-    })();
+
+        if (await checkService(urls.nikkiFavicon)) {
+            updateZash(urls.nikkiLink, "Zash | Nikki", "#ffd700");
+            console.log("Nikki detected.");
+            return;
+        }
+
+        updateZash(urls.defaultLink, "Zash", "#ffffff");
+        console.log("Default Zashboard.");
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', detect);
+    } else {
+        detect();
+    }
+})();
 </script>
 			</header>
 <br>
