@@ -3,39 +3,83 @@
 # Source include file
 . ./scripts/INCLUDE.sh
 
+# Exit on error
 set -e
 
+# Display profile information
 make info
 
+# Validasi
 PROFILE=""
 PACKAGES=""
+misc=""
 EXCLUDED=""
 
-# Declare PACKAGES once with all base packages, urutan sudah sesuai dependensi
-PACKAGES+=" kmod-mii kmod-nls-utf8 kmod-macvlan \
-kmod-usb-ohci kmod-usb-uhci kmod-usb2 kmod-usb-ehci \
-kmod-usb-net kmod-usb-wdm kmod-usb-net-qmi-wwan uqmi \
-kmod-usb-net-cdc-mbim umbim kmod-usb-net-cdc-ncm kmod-usb-net-huawei-cdc-ncm kmod-usb-net-cdc-ether \
-kmod-usb-net-rndis kmod-usb-net-sierrawireless \
-kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb-net-asix-ax88179 \
-kmod-usb-serial kmod-usb-serial-option kmod-usb-serial-wwan qmi-utils \
-kmod-usb-serial-qualcomm kmod-usb-acm kmod-usb-serial-sierrawireless xmm-modem \
-kmod-usb-storage kmod-usb-storage-uas ntfs-3g \
-libmbim libqmi mbim-utils modemmanager \
-luci-proto-qmi luci-proto-modemmanager luci-proto-ncm \
-modeminfo luci-app-modeminfo atinout modemband luci-app-modemband sms-tool luci-app-sms-tool-js picocom minicom \
-modeminfo-serial-tw modeminfo-serial-dell modeminfo-serial-xmm modeminfo-serial-fibocom modeminfo-serial-sierra \
-luci-app-diskman internet-detector luci-app-internet-detector vnstat2 vnstati2 luci-app-netmonitor \
-tailscale luci-app-tailscale speedtest-cli luci-app-eqosplus luci-theme-argon luci-theme-material \
-php8 php8-fastcgi php8-fpm php8-mod-session php8-mod-ctype php8-mod-fileinfo php8-mod-zip php8-mod-iconv php8-mod-mbstring zoneinfo-core zoneinfo-asia \
-libc bash coreutils-base64 coreutils-sleep coreutils-stat coreutils-stty curl wget-ssl \
-jq httping tar unzip parted resize2fs losetup zram-swap \
-adb screen htop lolcat python3-pip uhttpd uhttpd-mod-ubus \
-luci luci-base luci-mod-admin-full luci-lib-ip luci-compat luci-ssl \
-luci-app-droidnet luci-app-ipinfo luci-app-lite-watchdog luci-app-mactodong luci-app-poweroffdevice \
-luci-app-ramfree luci-app-tinyfm luci-app-ttyd luci-app-3ginfo-lite luci-app-mmconfig"
+# Hardware support - USB and LAN networking drivers
+PACKAGES+=" kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb-net-asix-ax88179"
+PACKAGES+=" kmod-mii kmod-usb-net kmod-usb-wdm kmod-usb-net-rndis kmod-usb-net-sierrawireless kmod-usb-net-qmi-wwan uqmi"
+PACKAGES+=" kmod-usb-net-cdc-ether usb-modeswitch kmod-usb-acm kmod-usb-net-huawei-cdc-ncm kmod-usb-net-cdc-ncm kmod-usb-net-cdc-mbim umbim"
+PACKAGES+=" kmod-usb-serial-option kmod-usb-serial kmod-usb-serial-wwan kmod-usb-serial-qualcomm kmod-usb-serial-sierrawireless mbim-utils qmi-utils"
+PACKAGES+=" libqmi libmbim luci-proto-qmi modemmanager luci-proto-modemmanager luci-proto-ncm xmm-modem"
+PACKAGES+=" kmod-usb-uhci kmod-usb-ohci kmod-usb2 kmod-usb-ehci usbutils kmod-nls-utf8 kmod-macvlan"
 
-# Function to add profile-specific packages
+# Modem management tools
+PACKAGES+=" modeminfo luci-app-modeminfo atinout modemband luci-app-modemband sms-tool luci-app-sms-tool-js picocom minicom"
+
+# ModemInfo serial support
+PACKAGES+=" modeminfo-serial-tw modeminfo-serial-dell modeminfo-serial-xmm modeminfo-serial-fibocom modeminfo-serial-sierra"
+
+# VPN tunnel packages
+OPENCLASH="coreutils-nohup bash ca-certificates ipset ip-full libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag kmod-nft-tproxy luci-app-openclash"
+NIKKI="nikki luci-app-nikki"
+NEKO="bash kmod-tun php8 php8-cgi luci-app-neko"
+PASSWALL="chinadns-ng resolveip dns2socks dns2tcp ipt2socks microsocks tcping xray-core xray-plugin luci-app-passwall"
+
+add_tunnel_packages() {
+    local option="$1"
+    case "$option" in
+        openclash)
+            PACKAGES+=" $OPENCLASH"
+            ;;
+        openclash-nikki)
+            PACKAGES+=" $OPENCLASH $NIKKI"
+            ;;
+        openclash-nikki-passwall)
+            PACKAGES+=" $OPENCLASH $NIKKI $PASSWALL"
+            ;;
+        "")
+            # tidak menambah tunnel packages
+            ;;
+    esac
+}
+
+# Storage - NAS
+PACKAGES+=" kmod-usb-storage kmod-usb-storage-uas ntfs-3g luci-app-diskman"
+
+# Monitoring - Autorekonek
+PACKAGES+=" internet-detector luci-app-internet-detector vnstat2 vnstati2 luci-app-netmonitor"
+
+# Remote access
+PACKAGES+=" tailscale luci-app-tailscale"
+
+# Bandwidth
+PACKAGES+=" speedtest-cli luci-app-eqosplus"
+
+# Theme - UI
+PACKAGES+=" luci-theme-argon luci-theme-material"
+
+# PHP packages
+PACKAGES+=" php8 php8-fastcgi php8-fpm php8-mod-session php8-mod-ctype php8-mod-fileinfo php8-mod-zip php8-mod-iconv php8-mod-mbstring zoneinfo-core zoneinfo-asia"
+
+# misc - Custom Packages (huruf kecil)
+misc+=" libc bash block-mount coreutils-base64 coreutils-sleep coreutils-stat coreutils-stty curl wget-ssl"
+misc+=" jq httping tar unzip parted resize2fs losetup zram-swap"
+misc+=" adb screen htop lolcat python3-pip uhttpd uhttpd-mod-ubus"
+misc+=" luci luci-base luci-mod-admin-full luci-lib-ip luci-compat luci-ssl"
+misc+=" luci-app-droidnet luci-app-ipinfo luci-app-lite-watchdog luci-app-mactodong luci-app-poweroffdevice"
+misc+=" luci-app-ramfree luci-app-tinyfm luci-app-ttyd luci-app-3ginfo-lite luci-app-mmconfig"
+
+# Profil Name
 configure_profile_packages() {
     local profile_name="$1"
 
@@ -56,7 +100,7 @@ configure_profile_packages() {
     fi
 }
 
-# Function to add base release packages
+# Packages base
 configure_release_packages() {
     if [[ "${BASE:-}" == "openwrt" ]]; then
         PACKAGES+=" wpad-openssl iw iwinfo wireless-regdb kmod-cfg80211 kmod-mac80211 luci-app-temp-status"
@@ -70,57 +114,37 @@ configure_release_packages() {
     fi
 }
 
-# Function to add tunnel-related packages
-add_tunnel_packages() {
-    local option="$1"
-
-    local OPENCLASH="coreutils-nohup bash ca-certificates ipset ip-full libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag kmod-nft-tproxy luci-app-openclash"
-    local NIKKI="nikki luci-app-nikki"
-    local NEKO="bash kmod-tun php8 php8-cgi luci-app-neko"
-    local PASSWALL="chinadns-ng resolveip dns2socks dns2tcp ipt2socks microsocks tcping xray-core xray-plugin luci-app-passwall"
-
-    case "$option" in
-        openclash)
-            PACKAGES+=" $OPENCLASH"
-            ;;
-        openclash-nikki)
-            PACKAGES+=" $OPENCLASH $NIKKI"
-            ;;
-        openclash-nikki-passwall)
-            PACKAGES+=" $OPENCLASH $NIKKI $PASSWALL"
-            ;;
-        *)
-            # no tunnel packages added
-            ;;
-    esac
-}
-
-# Main build function
+# 11. Build firmware
 build_firmware() {
     local target_profile="$1"
     local tunnel_option="${2:-}"
     local build_files="files"
 
-    log "INFO" "Building for profile '$target_profile' with tunnel option '$tunnel_option'"
+    log "INFO" "Starting build for profile '$target_profile' with tunnel option '$tunnel_option'..."
 
     configure_profile_packages "$target_profile"
     add_tunnel_packages "$tunnel_option"
     configure_release_packages
 
-    make image PROFILE="$target_profile" PACKAGES="$PACKAGES $EXCLUDED" FILES="$build_files"
-    local rc=$?
+    # Add misc packages to PACKAGES
+    PACKAGES+=" $misc"
 
-    if [ $rc -eq 0 ]; then
-        log "SUCCESS" "Build successful."
+    make image PROFILE="$target_profile" PACKAGES="$PACKAGES $EXCLUDED" FILES="$build_files"
+    local build_status=$?
+
+    if [ "$build_status" -eq 0 ]; then
+        log "SUCCESS" "Build completed successfully!"
     else
-        log "ERROR" "Build failed with exit code $rc"
-        exit $rc
+        log "ERROR" "Build failed with exit code $build_status"
+        exit "$build_status"
     fi
 }
 
+# Validasi argumen
 if [ -z "${1:-}" ]; then
-    log "ERROR" "Profile argument missing. Usage: $0 <profile> [tunnel_option]"
+    log "ERROR" "Profile not specified. Usage: $0 <profile> [tunnel_option]"
     exit 1
 fi
 
+# Running Build
 build_firmware "$1" "${2:-}"
