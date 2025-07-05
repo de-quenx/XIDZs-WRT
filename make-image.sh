@@ -15,7 +15,7 @@ EXCLUDED=""
 
 # Define base packages with USB host controller modules placed in the middle
 PACKAGES+=" kmod-mii kmod-nls-utf8 kmod-macvlan \
-kmod-usb-ohci kmod-usb-uhci kmod-usb2 kmod-usb kmod-usb-ehci \
+kmod-usb-ohci kmod-usb-uhci kmod-usb2 kmod-usb-ehci \
 kmod-usb-net kmod-usb-wdm kmod-usb-net-qmi-wwan uqmi \
 kmod-usb-net-cdc-mbim umbim kmod-usb-net-cdc-ncm kmod-usb-net-huawei-cdc-ncm kmod-usb-net-cdc-ether \
 usb-modeswitch usbutils kmod-usb-net-rndis kmod-usb-net-sierrawireless \
