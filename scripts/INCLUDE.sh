@@ -10,22 +10,6 @@ fi
 set -euo pipefail
 IFS=$'\n\t'
 
-# Global variables for configuration
-declare -A CONFIG=(
-    ["MAX_RETRIES"]=5
-    ["RETRY_DELAY"]=2
-    ["SPINNER_INTERVAL"]=0.1
-    ["DEBUG"]="false"
-)
-
-# Cleanup function
-cleanup() {
-    printf "\e[?25h"  # Ensure cursor is visible
-    # Kill spinner jobs if any
-    jobs -p 2>/dev/null | xargs -r kill 2>/dev/null || true
-}
-trap cleanup EXIT
-
 # Setup colors and formatting variables
 setup_colors() {
     PURPLE="\033[95m"
@@ -51,6 +35,25 @@ setup_colors() {
     HOLD=" "
     TAB="  "
 }
+
+# **PENTING: Panggil setup_colors seawal mungkin agar variabel warna terdefinisi saat script mulai**
+setup_colors
+
+# Global variables for configuration
+declare -A CONFIG=(
+    ["MAX_RETRIES"]=5
+    ["RETRY_DELAY"]=2
+    ["SPINNER_INTERVAL"]=0.1
+    ["DEBUG"]="false"
+)
+
+# Cleanup function
+cleanup() {
+    printf "\e[?25h"  # Ensure cursor is visible
+    # Kill spinner jobs if any
+    jobs -p 2>/dev/null | xargs -r kill 2>/dev/null || true
+}
+trap cleanup EXIT
 
 # Logging function
 log() {
@@ -322,7 +325,6 @@ download_packages() {
 
 # Main function, entry point
 main() {
-    setup_colors
 
     check_dependencies || exit 1
 
