@@ -281,15 +281,6 @@ for pkg in luci-app-openclash luci-app-nikki luci-app-passwall; do
                 check_status "chmod +x /etc/openclash/core/clash_meta" "OpenClash core permissions set"
                 check_status "chmod +x /etc/openclash/Country.mmdb" "OpenClash Country.mmdb permissions set"
                 check_status "chmod +x /etc/openclash/Geo* 2>/dev/null || true" "OpenClash Geo files permissions set"
-                
-                log_status "INFO" "Patching OpenClash overview..."
-                if [ -f /usr/bin/patchoc.sh ]; then
-                    check_status "bash /usr/bin/patchoc.sh" "OpenClash overview patched"
-                    check_status "sed -i '/exit 0/i #/usr/bin/patchoc.sh' /etc/rc.local 2>/dev/null || true" "OpenClash patch added to rc.local"
-                else
-                    log_status "WARNING" "patchoc.sh not found"
-                fi
-                
                 check_status "ln -sf /etc/openclash/history/Quenx.db /etc/openclash/cache.db" "OpenClash cache database symlink created"
                 check_status "ln -sf /etc/openclash/core/clash_meta /etc/openclash/clash" "OpenClash binary symlink created"
                 check_status "rm -f /etc/config/openclash" "Old OpenClash config removed"
