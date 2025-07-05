@@ -71,7 +71,7 @@ PACKAGES+=" luci-theme-argon luci-theme-material"
 # PHP packages
 PACKAGES+=" php8 php8-fastcgi php8-fpm php8-mod-session php8-mod-ctype php8-mod-fileinfo php8-mod-zip php8-mod-iconv php8-mod-mbstring zoneinfo-core zoneinfo-asia"
 
-# misc - Custom Packages (huruf kecil)
+# misc - Custom Packages
 misc+=" libc bash block-mount coreutils-base64 coreutils-sleep coreutils-stat coreutils-stty curl wget-ssl"
 misc+=" jq httping tar unzip parted resize2fs losetup zram-swap"
 misc+=" adb screen htop lolcat python3-pip uhttpd uhttpd-mod-ubus"
