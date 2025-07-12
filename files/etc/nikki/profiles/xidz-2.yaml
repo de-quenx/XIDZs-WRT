@@ -1,0 +1,124 @@
+proxy-providers:
+  ID:
+    type: file
+    path: ./proxy_provider/id.yaml
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: '120'
+  MIX:
+    type: file
+    path: ./proxy_provider/mix.yaml
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: '120'
+proxy-groups:
+- name: AUTO-ID-MIX
+  type: fallback
+  disable-udp: false
+  use:
+  - ID
+  - MIX
+  url: http://www.gstatic.com/generate_204
+  interval: '120'
+- name: LB-MIX-ID
+  type: load-balance
+  strategy: consistent-hashing
+  disable-udp: false
+  use:
+  - MIX
+  - ID
+  url: http://www.gstatic.com/generate_204
+  interval: '120'
+- name: SERVER-UMUM
+  type: select
+  disable-udp: false
+  proxies:
+  - AUTO-ID-MIX
+  - LB-MIX-ID
+- name: SERVER-INDO
+  type: select
+  disable-udp: false
+  proxies:
+  - AUTO-ID-MIX
+- name: SERVER-GAME
+  type: select
+  disable-udp: false
+  proxies:
+  - AUTO-ID-MIX
+  - DIRECT
+- name: BLOCK-IKLAN
+  type: select
+  disable-udp: false
+  proxies:
+  - SERVER-UMUM
+  - REJECT
+rule-providers:
+  Game:
+    type: file
+    behavior: classical
+    path: ./rule_provider/game.yaml
+  PortGame:
+    type: file
+    behavior: classical
+    path: ./rule_provider/portgame.yaml
+  Umum:
+    type: file
+    behavior: classical
+    path: ./rule_provider/umum.yaml 
+  indo:
+    type: file
+    behavior: classical
+    path: ./rule_provider/indo.yaml
+  Sosmed:
+    type: file
+    behavior: classical
+    path: ./rule_provider/sosmed.yaml
+  Streaming:
+    type: file
+    behavior: classical
+    path: ./rule_provider/streaming.yaml
+  Bankid:
+    type: file
+    behavior: domain
+    path: ./rule_provider/bankid.yaml
+  Tiktok:
+    type: file
+    behavior: domain
+    path: ./rule_provider/tiktok.yaml
+  Meta:
+    type: file
+    behavior: domain
+    path: ./rule_provider/meta.yaml
+rules:
+- RULE-SET,Umum,SERVER-UMUM
+- RULE-SET,Game,SERVER-GAME
+- RULE-SET,PortGame,SERVER-GAME
+- RULE-SET,indo,SERVER-INDO
+- RULE-SET,Sosmed,SERVER-INDO
+- RULE-SET,Streaming,SERVER-UMUM
+- RULE-SET,Bankid,SERVER-INDO
+- RULE-SET,Tiktok,SERVER-UMUM
+- RULE-SET,Meta,SERVER-INDO
+- MATCH,SERVER-UMUM
+dns:
+  proxy-server-nameserver:
+    - dhcp://usb0 # eth1 wwan0
+    - 192.168.42.129 # ganti ip modemmu
+  nameserver:
+    - 1.1.1.1
+    - 8.8.8.8
+    - 1.0.0.1
+  fallback:
+    - 9.9.9.9
+    - 149.112.112.112
+    - 208.67.222.222
+ntp:
+  servers:
+    - pool.ntp.org
+    - id.pool.ntp.org
+    - time.google.com
+  option:
+    maxpoll: 6
+    minpoll: 3

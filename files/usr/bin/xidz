@@ -1,0 +1,164 @@
+#!/bin/bash
+
+export LC_ALL=C
+export LANG=C
+
+detect_terminal_mode() {
+    terminal_width=$(stty size 2>/dev/null | awk '{print $2}' || echo "80")
+    terminal_height=$(stty size 2>/dev/null | awk '{print $1}' || echo "24")
+    
+    if [ "$terminal_width" -lt 80 ]; then
+        MODE="mobile"
+    else
+        MODE="desktop"
+    fi
+}
+
+linux_logo="
+ __     __    _____   ______      ______   
+(_ \\   / _)  (_   _) (_  __ \\    (____  )  
+  \\ \\_/ /      | |     ) ) \\ \\       / /   
+   \\   /       | |    ( (   ) )  ___/ /_   
+   / _ \\       | |     ) )  ) ) /__  ___)  
+ _/ / \\ \\_    _| |__  / /__/ /    / /____  
+(__/   \\__)  /_____( (______/    (_______) 
+                                           
+"
+
+format_memory() {
+    local kb_value="$1"
+    local mb_value=$((kb_value / 1024))
+    
+    if [ "$mb_value" -ge 1000 ]; then
+        local gb_value=$(awk "BEGIN {printf \"%.1f\", $mb_value/1000}")
+        echo "${gb_value}GB"
+    else
+        echo "${mb_value}MB"
+    fi
+}
+
+format_storage() {
+    local kb_value="$1"
+    local mb_value=$((kb_value / 1024))
+    
+    if [ "$mb_value" -ge 1000 ]; then
+        local gb_value=$(awk "BEGIN {printf \"%.1f\", $mb_value/1000}")
+        echo "${gb_value}GB"
+    else
+        echo "${mb_value}MB"
+    fi
+}
+
+get_system_info() {
+    os=$(grep 'DISTRIB_DESCRIPTION' /etc/openwrt_release | cut -d "'" -f 2 2>/dev/null || echo "Unknown Linux")
+    [ -z "$os" ] && os="Unknown Linux"
+    
+    host=$(cat /proc/device-tree/model 2>/dev/null | tr -d '\0' || hostname 2>/dev/null || echo "Unknown")
+    [ -z "$host" ] && host="Unknown"
+    
+    kernel=$(uname -r 2>/dev/null || echo "Unknown")
+    [ -z "$kernel" ] && kernel="Unknown"
+    
+    cpu_model=$(awk -F ': ' '/model name/ { print $2; exit }' /proc/cpuinfo 2>/dev/null || echo "Unknown")
+    [ -z "$cpu_model" ] && cpu_model="Unknown"
+    
+    uptime=$(awk '{
+        days=int($1/86400)
+        hours=int($1%86400/3600)
+        minutes=int(($1%3600)/60)
+        if(days>0) printf "%d days, %d hours", days, hours
+        else if(hours>0) printf "%d hours, %d minutes", hours, minutes
+        else printf "%d minutes", minutes
+    }' /proc/uptime 2>/dev/null || echo "Unknown")
+    [ -z "$uptime" ] && uptime="Unknown"
+    
+    cpu_temp=$(cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null | awk '{printf "%.1f°C\n", $1/1000; exit}' || echo "N/A")
+    [ -z "$cpu_temp" ] && cpu_temp="N/A"
+    
+    mem_info="Unknown"
+    if [ -f /proc/meminfo ]; then
+        mem_total_kb=$(awk '/MemTotal/ {print $2}' /proc/meminfo 2>/dev/null)
+        mem_available_kb=$(awk '/MemAvailable/ {print $2}' /proc/meminfo 2>/dev/null)
+        
+        if [ -z "$mem_available_kb" ]; then
+            mem_free_kb=$(awk '/MemFree/ {print $2}' /proc/meminfo 2>/dev/null)
+            mem_cached_kb=$(awk '/Cached/ {print $2}' /proc/meminfo 2>/dev/null)
+            mem_available_kb=$((mem_free_kb + mem_cached_kb))
+        fi
+        
+        if [ -n "$mem_total_kb" ] && [ "$mem_total_kb" -gt 0 ] 2>/dev/null; then
+            mem_used_kb=$((mem_total_kb - mem_available_kb))
+            mem_percent=$(awk "BEGIN {printf \"%.0f\", ($mem_used_kb/$mem_total_kb*100)}")
+            mem_used_formatted=$(format_memory "$mem_used_kb")
+            mem_total_formatted=$(format_memory "$mem_total_kb")
+            mem_info="${mem_used_formatted}/${mem_total_formatted} (${mem_percent}%)"
+        fi
+    fi
+    
+    rootfs_info="Unknown"
+    if command -v df >/dev/null 2>&1; then
+        rootfs_data=$(df / 2>/dev/null | tail -n 1)
+        if [ -n "$rootfs_data" ]; then
+            rootfs_total_kb=$(echo "$rootfs_data" | awk '{print $2}')
+            rootfs_used_kb=$(echo "$rootfs_data" | awk '{print $3}')
+            rootfs_available_kb=$(echo "$rootfs_data" | awk '{print $4}')
+            rootfs_percent=$(echo "$rootfs_data" | awk '{print $5}' | tr -d '%')
+            
+            if [ -n "$rootfs_total_kb" ] && [ "$rootfs_total_kb" -gt 0 ] 2>/dev/null; then
+                rootfs_used_formatted=$(format_storage "$rootfs_used_kb")
+                rootfs_total_formatted=$(format_storage "$rootfs_total_kb")
+                rootfs_info="${rootfs_used_formatted}/${rootfs_total_formatted} (${rootfs_percent}%)"
+            fi
+        fi
+    fi
+    
+    packages=$(opkg list-installed 2>/dev/null | wc -l || echo "N/A")
+}
+
+display_logo() {
+    printf "\033[1;34m"
+    for i in {1..65}; do printf "="; done
+    printf "\033[0m\n"
+    
+    echo -e "\033[1;32m$linux_logo\033[0m"
+}
+
+display_text_info() {
+    printf "\033[1;34m"
+    for i in {1..65}; do printf "="; done
+    printf "\033[0m\n"
+    
+    info_text="Thank to Allah SWT | Builds By Fidz | xidz_x"
+    pad=$(( (65 - ${#info_text}) / 2 ))
+    printf "\033[1;33m%*s%s%*s\033[0m\n" $pad "" "$info_text" $pad ""
+}
+
+display_system_info() {
+    get_system_info
+    
+    echo
+    printf "\033[1;36m"
+    echo "OS        : $os"
+    echo "Host      : $host"
+    echo "Kernel    : $kernel"
+    echo "Uptime    : $uptime"
+    echo "CPU       : $cpu_model"
+    echo "Temp      : $cpu_temp"
+    printf "\033[1;32m"
+    echo "RootFS    : $rootfs_info"
+    printf "\033[1;36m"
+    echo "Memory    : $mem_info"
+    echo "Packages  : $packages"
+    printf "\033[0m\n"
+}
+
+main_display() {
+    detect_terminal_mode
+    clear
+    
+    display_logo
+    display_text_info
+    display_system_info
+}
+
+main_display

@@ -1,0 +1,99 @@
+<!DOCTYPE html><html lang="en">
+<head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>XIDZs-WRT</title><link rel="stylesheet" href="<%=media%>/xidz.css">
+  <link rel="shortcut icon" href="<%=media%>/favicon.ico"><style>
+    @keyframes rainbow {0%, 100% { color: rgb(255, 0,0); }8.33% { color: rgb(255, 64, 0); }
+      16.66% { color: rgb(255, 128, 0); }
+      25% { color: rgb(255, 192,0); }33.33% { color: rgb(255, 255,0); }41.66% { color: rgb(192, 255,0); }50% { color: rgb(128,255, 0); }
+      58.33% { color: rgb(64,255, 0); }
+      66.66% { color: rgb(0, 255, 0); }
+      75% { color: rgb(0, 192, 255); }
+      83.33% { color: rgb(0, 128, 255); }
+      91.66% { color: rgb(128, 0,255); }}h2, #jam, #tanggal-lengkap {
+      animation: rainbow 4s linear infinite;
+    }
+
+    .alert-message {
+      padding: 15px20px;margin: a 20px auto;
+      max-width: 400px;
+      animation: slideDown 0.5s ease-out;
+      background: rgba(255, 255,255, 0.05) !important;border: 1px solid #FFDD00 !important;border-left: 4px solid #FFDD00 !important;
+      border-radius: 8px !important;box-shadow:0 2px 10px rgba(255, 255,255, 0.1) !important;
+      backdrop-filter: blur(10px) !important;color: #FBFBFB !important;
+    }
+
+    .alert-message p {
+      color: #FBFBFB !important;margin: 0;
+    }
+    
+    .input_group input.input_text {
+      border-bottom: 2px solid rgba(255, 255, 255,0.3) !important;
+      box-shadow:0 1px 3px rgba(255, 255,255, 0.1) !important;
+      transition: all 0.3s ease !important;}
+
+    .input_group input.input_text:focus {border-bottom: 2px solid rgba(255, 255,255, 0.5) !important;
+      box-shadow: 0 2px 6px rgba(255, 255, 255, 0.2) !important;
+      outline: none !important;
+    }
+    
+    @keyframes slideDown {
+      0% { opacity: 0; transform: translateY(-20px); }100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideUp {
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-20px); }}
+
+    .fade-out {animation: slideUp 0.3s ease-out forwards;
+    }
+  </style>
+</head><body><form method="post" action="<%=pcdata(FULL_REQUEST_URI)%>"><%- if fuser then %>
+      <div class="alert-message" id="warning-alert">
+        <center><p><%:Username Atau Sandi Salah%><br><%:Masukan Dengan Benar%></p></center>
+      </div><% end-%>
+
+    <div class="login_form_container"><div class="login_form"><h2>XIDZs-WRT</h2>
+        <center>
+          <span id="tanggal-lengkap"></span> | <span id="jam"></span></center>
+
+        <div class="input_group">
+          <i class="fa fa-user"></i>
+          <input class="input_text" type="text" name="luci_username" placeholder="Username" autocomplete="off" value="<%=duser%>">
+        </div>
+        
+        <div class="input_group">
+          <i class="fa fa-unlock-alt"></i>
+          <input class="input_text" type="password" name="luci_password" placeholder="Password" autocomplete="off">
+        </div><div class="button_group" id="login_button"><center><input type="submit" value="<%:Login%>"></center></div></div></div></form><script>const updateTime = () => {const now = new Date();
+      document.getElementById("jam").textContent =`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    };
+
+    const setDate = () => {
+      const namaHari = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+      const namaBulan = ["Januari", "Februari", "Maret", "April", "Mei", "Juni",
+                        "Juli", "Agustus", "September", "Oktober", "November", "Desember"];const tgl = new Date();document.getElementById("tanggal-lengkap").textContent =
+        `${namaHari[tgl.getDay()]}, ${tgl.getDate()} ${namaBulan[tgl.getMonth()]} ${tgl.getFullYear()}`;
+    };document.addEventListener('DOMContentLoaded', () => {
+      setDate();
+      updateTime();
+      setInterval(updateTime,1000);
+      const alertElement = document.getElementById('warning-alert');
+      if (alertElement) {setTimeout(() => {
+          alertElement.classList.add('fade-out');
+          setTimeout(() => alertElement.style.display ='none',300);
+        },3000);}
+      const passwordInput = document.getElementsByName('luci_password')[0];if (passwordInput) passwordInput.focus();
+    });</script><%
+  local uci = require "luci.model.uci".cursor()
+  local fs = require "nixio.fs"
+  local https_key = uci:get("uhttpd", "main", "key")local https_port = uci:get("uhttpd", "main", "listen_https")
+  if type(https_port) == "table" then
+    https_port = https_port[1]end
+
+  if https_port and fs.access(https_key) then
+    https_port = https_port:match("(%d+)$")%><script>
+      if (document.location.protocol !== 'https:') {const httpsUrl = `https://${window.location.hostname}:<%=https_port%>${window.location.pathname}`;const img = new Image();img.onload = () => window.location = httpsUrl;
+        img.src = `https://${window.location.hostname}:<%=https_port%>/<%=resource%>/icons/loading.gif?${Math.random()}`;setTimeout(() => img.src = '', 240);}
+    </script>
+  <% end %><script src="login.js"></script>
+</body></html>

@@ -1,0 +1,35 @@
+payload:
+    # > Zerotier
+  - DOMAIN,my.zerotier.com
+  - DOMAIN-SUFFIX,zerotier.com
+  - DST-PORT,9993
+  - DST-PORT,20431
+  - DST-PORT,29994
+  - DST-PORT,40775
+  - DST-PORT,43215
+  # Teamviewer
+  - DST-PORT,5938
+  - DOMAIN-SUFFIX,teamviewer.com
+  # AnyDesk
+  - DOMAIN-SUFFIX,net.anydesk.com
+  - IP-CIDR,239.255.102.18/32
+  - DST-PORT,6568
+  - DST-PORT,50001
+  - DST-PORT,50002
+  - DST-PORT,50003
+  - DST-PORT,6568
+  - DST-PORT,7070
+# cloudflare zerotrust
+  - DOMAIN-SUFFIX,teamviewer.com
+  - DOMAIN-SUFFIX,anydesk.com
+  - DOMAIN-SUFFIX,zerotier.com
+  - DOMAIN-SUFFIX,argotunnel.com
+  - DST-PORT,7844
+# DLL
+  - DST-PORT,6568 
+  - DST-PORT,50001
+  - DST-PORT,50002
+  - DST-PORT,50003
+  - DST-PORT,6568
+  - DST-PORT,7070
+  - DST-PORT,5938

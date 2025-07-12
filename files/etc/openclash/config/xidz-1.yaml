@@ -1,0 +1,102 @@
+proxy-providers:
+  MIX:
+    type: file
+    path: ./proxy_provider/mix.yaml
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: '120'
+proxy-groups:
+- name: AUTO-MIX
+  type: fallback
+  disable-udp: false
+  use:
+  - MIX
+  url: http://www.gstatic.com/generate_204
+  interval: '120'
+- name: SELECT
+  type: select
+  disable-udp: false
+  use:
+  - MIX
+- name: SERVER-UMUM
+  type: select
+  disable-udp: false
+  proxies:
+  - AUTO-MIX
+  - SELECT
+- name: SERVER-GAME
+  type: select
+  disable-udp: false
+  proxies:
+  - AUTO-MIX
+  - SELECT
+  - DIRECT
+rule-providers:
+  Game:
+    type: file
+    behavior: classical
+    path: ./rule_provider/game.yaml
+  PortGame:
+    type: file
+    behavior: classical
+    path: ./rule_provider/portgame.yaml
+  Umum:
+    type: file
+    behavior: classical
+    path: ./rule_provider/umum.yaml 
+  indo:
+    type: file
+    behavior: classical
+    path: ./rule_provider/indo.yaml
+  Sosmed:
+    type: file
+    behavior: classical
+    path: ./rule_provider/sosmed.yaml
+  Streaming:
+    type: file
+    behavior: classical
+    path: ./rule_provider/streaming.yaml
+  Bankid:
+    type: file
+    behavior: domain
+    path: ./rule_provider/bankid.yaml
+  Tiktok:
+    type: file
+    behavior: domain
+    path: ./rule_provider/tiktok.yaml
+  Meta:
+    type: file
+    behavior: domain
+    path: ./rule_provider/meta.yaml
+rules:
+- RULE-SET,Umum,SERVER-UMUM
+- RULE-SET,Game,SERVER-GAME
+- RULE-SET,PortGame,SERVER-GAME
+- RULE-SET,indo,SERVER-UMUM
+- RULE-SET,Sosmed,SERVER-UMUM
+- RULE-SET,Streaming,SERVER-UMUM
+- RULE-SET,Bankid,SERVER-UMUM
+- RULE-SET,Tiktok,SERVER-UMUM
+- RULE-SET,Meta,SERVER-UMUM
+- MATCH,SERVER-UMUM
+dns:
+  proxy-server-nameserver:
+    - dhcp://usb0 # eth1 wwan0
+    - 192.168.42.129 # ganti ip modemmu
+  nameserver:
+    - 1.1.1.1
+    - 8.8.8.8
+    - 1.0.0.1
+  fallback:
+    - 9.9.9.9
+    - 149.112.112.112
+    - 208.67.222.222
+ntp:
+  servers:
+    - pool.ntp.org
+    - id.pool.ntp.org
+    - time.google.com
+  option:
+    maxpoll: 6
+    minpoll: 3

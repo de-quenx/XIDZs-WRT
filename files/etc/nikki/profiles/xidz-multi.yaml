@@ -1,0 +1,140 @@
+proxy-providers:
+  MIX:
+    type: file
+    path: ./proxy_provider/mix.yaml
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 300
+proxy-groups:
+- name: AUTO-MIX
+  type: fallback
+  disable-udp: false
+  use:
+  - MIX
+  url: http://www.gstatic.com/generate_204
+  interval: '120'
+- name: SERVER-UMUM
+  type: select
+  disable-udp: false
+  proxies:
+  - AUTO-MIX
+- name: SERVER-GAME
+  type: select
+  disable-udp: false
+  proxies:
+  - SERVER-UMUM
+  - DIRECT
+- name: FB-IG-LINE
+  type: select
+  disable-udp: false
+  proxies:
+  - DIRECT
+  - SERVER-UMUM
+- name: WHATSAPP
+  type: select
+  disable-udp: false
+  proxies:
+  - DIRECT
+  - SERVER-UMUM
+- name: YOUTUBE
+  type: select
+  disable-udp: false
+  proxies:
+  - DIRECT
+  - SERVER-UMUM
+- name: NETFLIX
+  type: select
+  disable-udp: false
+  proxies:
+  - DIRECT
+  - SERVER-UMUM
+- name: TIKTOK
+  type: select
+  disable-udp: false
+  proxies:
+  - DIRECT
+  - SERVER-UMUM
+rule-providers:
+  bankid:
+    type: file
+    behavior: domain
+    path: ./rule_provider/bankid.yaml
+  game:
+    type: file
+    behavior: classical
+    path: ./rule_provider/game.yaml
+  portgame:
+    type: file
+    behavior: classical
+    path: ./rule_provider/portgame.yaml
+  umum:
+    type: file
+    behavior: classical
+    path: ./rule_provider/umum.yaml
+  whatsapp:
+    type: file
+    behavior: classical
+    path: ./rule_provider/whatsapp.yaml
+  youtube:
+    type: file
+    behavior: classical
+    path: ./rule_provider/youtube.yaml
+  fb:
+    type: file
+    behavior: classical
+    path: ./rule_provider/fb.yaml
+  meta:
+    type: file
+    behavior: classical
+    path: ./rule_provider/meta.yaml
+  ig:
+    type: file
+    behavior: classical
+    path: ./rule_provider/ig.yaml
+  line:
+    type: file
+    behavior: classical
+    path: ./rule_provider/line.yaml
+  netflix:
+    type: file
+    behavior: classical
+    path: ./rule_provider/netflix.yaml
+  tiktok:
+    type: file
+    behavior: classical
+    path: ./rule_provider/tiktok.yaml
+rules:
+- RULE-SET,whatsapp,WHATSAPP
+- RULE-SET,line,FB-IG-LINE
+- RULE-SET,fb,FB-IG-LINE
+- RULE-SET,meta,FB-IG-LINE
+- RULE-SET,ig,FB-IG-LINE
+- RULE-SET,youtube,YOUTUBE
+- RULE-SET,netflix,NETFLIX
+- RULE-SET,tiktok,TIKTOK
+- RULE-SET,umum,SERVER-UMUM
+- RULE-SET,game,SERVER-GAME
+- RULE-SET,portgame,SERVER-GAME
+- RULE-SET,bankid,SERVER-UMUM
+- MATCH,SERVER-UMUM
+dns:
+  proxy-server-nameserver:
+    - dhcp://usb0 # eth1 wwan0
+    - 192.168.42.129 # ganti ip modemmu
+  nameserver:
+    - 1.1.1.1
+    - 8.8.8.8
+    - 1.0.0.1
+  fallback:
+    - 9.9.9.9
+    - 149.112.112.112
+    - 208.67.222.222
+ntp:
+  servers:
+    - pool.ntp.org
+    - id.pool.ntp.org
+    - time.google.com
+  option:
+    maxpoll: 6
+    minpoll: 3

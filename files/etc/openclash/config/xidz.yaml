@@ -1,0 +1,178 @@
+proxy-providers:
+  ID:
+    type: file
+    path: ./proxy_provider/id.yaml
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: '120'
+  MIX:
+    type: file
+    path: ./proxy_provider/mix.yaml
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: '120'
+  MODEM1:
+    type: file
+    path: ./proxy_provider/modem1.yaml
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: '120'
+  MODEM2:
+    type: file
+    path: ./proxy_provider/modem2.yaml
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: '120'
+  DIRECTMODEM:
+    type: file
+    path: ./proxy_provider/directmodem.yaml
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: '120'
+proxy-groups:
+- name: AUTO-ID-MIX
+  type: fallback
+  disable-udp: false
+  use:
+  - ID
+  - MIX
+  url: http://www.gstatic.com/generate_204
+  interval: '120'
+- name: LB-MIX-ID
+  type: load-balance
+  strategy: consistent-hashing
+  disable-udp: false
+  use:
+  - MIX
+  - ID
+  url: http://www.gstatic.com/generate_204
+  interval: '120'
+- name: MODEM1
+  type: select
+  interface-name: usb0
+  disable-udp: false
+  use:
+  - MODEM1
+- name: MODEM2
+  type: select
+  interface-name: eth1
+  disable-udp: false
+  use:
+  - MODEM2
+- name: LB-2-MODEM
+  type: load-balance
+  strategy: round-robin
+  disable-udp: false
+  proxies:
+  - MODEM1
+  - MODEM2
+  url: http://www.gstatic.com/generate_204
+  interval: '120'
+- name: SERVER-UMUM
+  type: select
+  disable-udp: false
+  proxies:
+  - AUTO-ID-MIX
+  - LB-MIX-ID
+  - LB-2-MODEM
+- name: SERVER-INDO
+  type: select
+  disable-udp: false
+  proxies:
+  - AUTO-ID-MIX
+  use:
+  - DIRECTMODEM
+- name: SERVER-GAME
+  type: select
+  disable-udp: false
+  proxies:
+  - AUTO-ID-MIX
+  - DIRECT
+  use:
+  - DIRECTMODEM
+- name: BLOCK-IKLAN
+  type: select
+  disable-udp: false
+  proxies:
+  - SERVER-UMUM
+  - REJECT
+rule-providers:
+  Game:
+    type: file
+    behavior: classical
+    path: ./rule_provider/game.yaml
+  PortGame:
+    type: file
+    behavior: classical
+    path: ./rule_provider/portgame.yaml
+  Umum:
+    type: file
+    behavior: classical
+    path: ./rule_provider/umum.yaml 
+  indo:
+    type: file
+    behavior: classical
+    path: ./rule_provider/indo.yaml
+  Sosmed:
+    type: file
+    behavior: classical
+    path: ./rule_provider/sosmed.yaml
+  Streaming:
+    type: file
+    behavior: classical
+    path: ./rule_provider/streaming.yaml
+  Bankid:
+    type: file
+    behavior: domain
+    path: ./rule_provider/bankid.yaml
+  Tiktok:
+    type: file
+    behavior: domain
+    path: ./rule_provider/tiktok.yaml
+  Meta:
+    type: file
+    behavior: domain
+    path: ./rule_provider/meta.yaml
+  Oisd_small:
+    type: http
+    behavior: classical
+    path: ./rule_provider/oisd_small.yaml
+    url: https://raw.githubusercontent.com/hillz2/openclash_adblock/main/oisd_small.yaml
+    interval: 28800 # Update rules every 8 hours
+rules:
+- RULE-SET,Umum,SERVER-UMUM
+- RULE-SET,Game,SERVER-GAME
+- RULE-SET,PortGame,SERVER-GAME
+- RULE-SET,indo,SERVER-INDO
+- RULE-SET,Sosmed,SERVER-INDO
+- RULE-SET,Streaming,SERVER-UMUM
+- RULE-SET,Bankid,SERVER-INDO
+- RULE-SET,Tiktok,SERVER-UMUM
+- RULE-SET,Meta,SERVER-INDO
+- RULE-SET,Oisd_small,BLOCK-IKLAN
+- MATCH,SERVER-UMUM
+dns:
+  proxy-server-nameserver:
+    - dhcp://usb0 # eth1 wwan0
+    - 192.168.42.129 # ganti ip modemmu
+  nameserver:
+    - 1.1.1.1
+    - 8.8.8.8
+    - 1.0.0.1
+  fallback:
+    - 9.9.9.9
+    - 149.112.112.112
+    - 208.67.222.222
+ntp:
+  servers:
+    - pool.ntp.org
+    - id.pool.ntp.org
+    - time.google.com
+  option:
+    maxpoll: 6
+    minpoll: 3
