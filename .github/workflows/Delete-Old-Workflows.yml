@@ -1,0 +1,96 @@
+name: Delete old workflow runs
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9.0.0
+        with:
+          stale-issue-message: "Stale Issue"
+          stale-pr-message: "Stale PR"
+          stale-issue-label: "no-issue-activity"
+          exempt-issue-labels: "awaiting-approval,awaiting,work-in-progress"
+          stale-pr-label: "no-pr-activity"
+          exempt-pr-labels: "awaiting-approval,awaiting,work-in-progress"
+          days-before-issue-stale: 10
+          days-before-pr-stale: 10
+          days-before-issue-close: 5
+          days-before-pr-close: 0
+          operations-per-run: 500
+
+      - name: Clear caches, tmp and trash files with log
+        run: |
+          echo "=== Starting cache and tmp clearing ==="
+          
+          echo "Clearing user cache folder (~/.cache)..."
+          if [ -d ~/.cache ]; then
+            rm -rf ~/.cache/* && echo "User cache cleared" || echo "Failed to clear user cache"
+          else
+            echo "~/.cache folder does not exist"
+          fi
+          
+          echo "Clearing runner /tmp directory..."
+          if [ -d /tmp ]; then
+            sudo rm -rf /tmp/* && echo "/tmp cleared" || echo "Failed to clear /tmp"
+          else
+            echo "/tmp folder does not exist"
+          fi
+          
+          echo "Clearing tmp folder in repo (if exists)..."
+          if [ -d tmp ]; then
+            rm -rf tmp/* && echo "Repo tmp folder cleared" || echo "Failed to clear repo tmp"
+          else
+            echo "Repo tmp folder does not exist"
+          fi
+          
+          echo "=== Cache and tmp clearing completed ==="
+
+      - name: Clear Docker logs, tmp and system prune
+        run: |
+          echo "=== Starting Docker logs and tmp cleaning ==="
+
+          DOCKER_CONTAINERS_LOGS="/var/lib/docker/containers"
+          DOCKER_TMP="/var/lib/docker/tmp"
+          DOCKER_LOGS="/var/log/docker"
+
+          # Truncate Docker container logs to reduce size safely
+          if [ -d "$DOCKER_CONTAINERS_LOGS" ]; then
+            echo "Truncating Docker container logs in $DOCKER_CONTAINERS_LOGS..."
+            sudo find "$DOCKER_CONTAINERS_LOGS" -type f -name "*.log" -exec truncate -s 0 {} \; && echo "Docker container logs truncated" || echo "Failed to truncate Docker container logs"
+          else
+            echo "Docker container logs folder not found"
+          fi
+
+          # Remove Docker tmp files
+          if [ -d "$DOCKER_TMP" ]; then
+            echo "Removing Docker tmp files in $DOCKER_TMP..."
+            sudo rm -rf ${DOCKER_TMP}/* && echo "Docker tmp cleaned" || echo "Failed to clean Docker tmp"
+          else
+            echo "Docker tmp folder not found"
+          fi
+
+          # Remove Docker daemon logs
+          if [ -d "$DOCKER_LOGS" ]; then
+            echo "Removing Docker daemon logs in $DOCKER_LOGS..."
+            sudo rm -rf ${DOCKER_LOGS}/* && echo "Docker daemon logs cleaned" || echo "Failed to clean Docker daemon logs"
+          else
+            echo "Docker daemon logs folder not found"
+          fi
+
+          echo "Running 'docker system prune -f' to clean unused Docker data..."
+          sudo docker system prune -f && echo "Docker system prune completed" || echo "Docker system prune failed"
+
+          echo "=== Docker cleanup completed ==="
+
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@v2.0.6
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 0
+          keep_minimum_runs: 0

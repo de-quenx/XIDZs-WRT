@@ -1,0 +1,507 @@
+name: Generate ULO Firmware
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_branch:
+        description: "Select the release branch:"
+        required: true
+        default: "openwrt:24.10.2"
+        type: choice
+        options:
+          - openwrt:24.10.2
+          - openwrt:23.05.5
+          - immortalwrt:24.10.2
+          - immortalwrt:23.05.4
+      target:
+        description: "Select device board"
+        required: false
+        default: "all-device"
+        type: choice
+        options:
+          - all-device
+          - Allwinner H5 Orange Pi Zero Plus
+          - Allwinner H5 Orange Pi Zero Plus2
+          - Allwinner H6 Orange Pi 3
+          - Allwinner H6 Orange Pi 3 LTS
+          - Allwinner H616 Orange Pi Zero2
+          - Allwinner H618 Orange Pi Zero3
+          - Amlogic B860Hv5 v1
+          - Amlogic B860Hv5 v2
+          - Amlogic B860Hv5 v3
+          - Amlogic HG680-FJ v1
+          - Amlogic HG680-FJ v2
+          - Amlogic HG680-FJ v3
+          - Amlogic s905x4 v1
+          - Amlogic s905x4 v2
+          - Amlogic s905x4 v3
+          - Amlogic s905x4 v4
+          - Rockchip rk3566 Orange Pi 3B
+      tunnel:
+        description: "Select Tunnel VPN"
+        required: true
+        default: "openclash"
+        type: choice
+        options:
+          - openclash
+          - openclash-nikki
+          - openclash-nikki-passwall
+          - no-tunnel
+      clean:
+        description: "Do 'make clean' for each run"
+        required: false
+        default: "true"
+        type: boolean
+
+env:
+  TZ: Asia/Jakarta
+  WORKING_DIR: imagebuilder
+  DEBIAN_FRONTEND: noninteractive
+  RELEASE_BRANCH: ${{ github.event.inputs.release_branch }}
+  TARGET: ${{ github.event.inputs.target }}
+  TUNNEL: ${{ github.event.inputs.tunnel }}
+  CLEAN: ${{ github.event.inputs.clean }}
+
+jobs:
+  prebuild:
+    runs-on: ubuntu-22.04
+    name: ${{ github.event.inputs.release_branch }}
+    outputs:
+      target: ${{ steps.set-matrix.outputs.target }}
+      type: ${{ steps.setupenv.outputs.type }}
+      base: ${{ steps.setupenv.outputs.base }}
+      branch: ${{ steps.setupenv.outputs.branch }}
+      verop: ${{ steps.setupenv.outputs.verop }}
+      download_base: ${{ steps.setupenv.outputs.download_base }}
+      date: ${{ steps.setupenv.outputs.date }}
+      datetime: ${{ steps.setupenv.outputs.datetime }}
+      datemonth: ${{ steps.setupenv.outputs.datemonth }}
+      release_name: ${{ steps.setupenv.outputs.release_name }}
+      release_tag: ${{ steps.setupenv.outputs.release_tag }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Set Matrix Run
+        id: set-matrix
+        run: |
+          echo "Selected target option: [ ${{ github.event.inputs.target }} ]"
+          TARGET_JSON=$(cat << 'EOJ'
+          {
+            "target": [
+              "Allwinner H5 Orange Pi Zero Plus",
+              "Allwinner H5 Orange Pi Zero Plus2",
+              "Allwinner H6 Orange Pi 3",
+              "Allwinner H6 Orange Pi 3 LTS",
+              "Allwinner H616 Orange Pi Zero2",
+              "Allwinner H618 Orange Pi Zero3",
+              "Amlogic B860Hv5 v1",
+              "Amlogic B860Hv5 v2",
+              "Amlogic B860Hv5 v3",
+              "Amlogic HG680-FJ v1",
+              "Amlogic HG680-FJ v2",
+              "Amlogic HG680-FJ v3",
+              "Amlogic s905x4 v1",
+              "Amlogic s905x4 v2",
+              "Amlogic s905x4 v3",
+              "Amlogic s905x4 v4",
+              "Rockchip rk3566 Orange Pi 3B"
+            ]
+          }
+          EOJ
+          )
+
+          if [ "${{ github.event.inputs.target }}" == "all-device" ]; then
+            echo "target=$(echo "$TARGET_JSON" | jq -c '.target')" >> $GITHUB_OUTPUT
+          else
+            echo "target=$(jq -nc --arg d "${{ github.event.inputs.target }}" '[$d]')" >> $GITHUB_OUTPUT
+          fi
+
+          echo "Selected tunnel option: [ ${{ github.event.inputs.tunnel }} ]"
+
+      - name: Setup Release Environment
+        id: setupenv
+        run: |
+          sudo timedatectl set-timezone "${{ env.TZ }}"
+
+          TYPE="ULO"
+          echo "type=$TYPE" >> $GITHUB_OUTPUT
+
+          BASE="${RELEASE_BRANCH%:*}"
+          BRANCH="${RELEASE_BRANCH#*:}"
+          VEROP="$(echo "${BRANCH}" | awk -F. '{print $1"."$2}')"
+
+          echo "base=$BASE" >> $GITHUB_OUTPUT
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          echo "verop=$VEROP" >> $GITHUB_OUTPUT
+          echo "download_base=https://downloads.${BASE}.org" >> $GITHUB_OUTPUT
+
+          DATE=$(date +'%d%m%Y')
+          DATETIME=$(date +'%d.%m.%Y-%H:%M:%S')
+          DATEMONTH=$(date +"%B-%Y" | awk '{print tolower($0)}')
+
+          echo "date=$DATE" >> $GITHUB_OUTPUT
+          echo "datetime=$DATETIME" >> $GITHUB_OUTPUT
+          echo "datemonth=$DATEMONTH" >> $GITHUB_OUTPUT
+
+          if [ "${BASE}" == "openwrt" ]; then
+            RELEASE_NAME="ULO-OpenWRT-${BRANCH}-${DATE}"
+            RELEASE_TAG="ulo-openwrt-${BRANCH}-${DATE}"
+            echo "release_name=$RELEASE_NAME" >> $GITHUB_OUTPUT
+            echo "release_tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
+          elif [ "${BASE}" == "immortalwrt" ]; then
+            RELEASE_NAME="ULO-ImmortalWRT-${BRANCH}-${DATE}"
+            RELEASE_TAG="ulo-immortalwrt-${BRANCH}-${DATE}"
+            echo "release_name=$RELEASE_NAME" >> $GITHUB_OUTPUT
+            echo "release_tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
+          fi
+          echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        if: steps.setupenv.outputs.status == 'success'
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.setupenv.outputs.release_tag }}
+          name: ${{ steps.setupenv.outputs.release_name }}
+          prerelease: ${{ github.ref_name == 'dev' }}
+          body: |
+            ## XIDZs-WRT INFORMATION ##
+            - Default IP: 192.168.1.1
+            - Default username: root
+            - Default password: xyyraa
+            - Default WIFI name: XIDZs-WRT | XIDZs-WRT_5G
+            - Default WIFI password: XIDZs2025
+            ## Amlogic Series
+            - **S905X2**: HG680-FJ, B860Hv5  
+            - **S905X4**: Akari Ax810, Advan AT01
+            ## Allwinner Series
+            - **H5**: Orange Pi Zero Plus2, Orange Pi Zero Plus
+            - **H6**: Orange Pi 3, Orange Pi 3 LTS
+            - **H616**: Orange Pi Zero2
+            - **H618**: Orange Pi Zero3
+            ## FEATURES
+            - Tema Alpha ⨯ Tema Argon ⨯ Tema Material
+            - Amlogic Service ⨯ Droidnet
+            - 3ginfo-Lite ⨯ Modeminfo ⨯ IP Information
+            - FIX TTL ⨯ Tailscale
+            - Eqosplus ⨯ Mactodong
+            - Internet Detector ⨯ Connection Monitor
+            - Support Modem Rakitan ⨯ Auto Reconnect
+            - Auto Time Sync ⨯ File Manager
+            - Config Openclash ⨯ Nikki ⨯ Passwall
+            ## TUNNEL OPTIONS
+            - OpenClash
+            - OpenClash + Nikki
+            - OpenClash + Nikki + Passwall
+            - No Tunnel
+            
+  build-firmware:
+    name: Build ${{ matrix.target }} Firmware
+    needs: prebuild
+    runs-on: ubuntu-22.04
+    env:
+      TYPE: ${{ needs.prebuild.outputs.type }}
+      BASE: ${{ needs.prebuild.outputs.base }}
+      BRANCH: ${{ needs.prebuild.outputs.branch }}
+      VEROP: ${{ needs.prebuild.outputs.verop }}
+      DOWNLOAD_BASE: ${{ needs.prebuild.outputs.download_base }}
+      DATE: ${{ needs.prebuild.outputs.date }}
+      DATETIME: ${{ needs.prebuild.outputs.datetime }}
+      DATEMONTH: ${{ needs.prebuild.outputs.datemonth }}
+      RELEASE_NAME: ${{ needs.prebuild.outputs.release_name }}
+      RELEASE_TAG: ${{ needs.prebuild.outputs.release_tag }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJSON(needs.prebuild.outputs.target) }}
+
+    steps:
+      - name: Initialization environment
+        id: init
+        run: |
+          docker rmi $(docker images -q) 2>/dev/null
+          [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
+          sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null
+          sudo swapoff -a
+          sudo rm -f /swapfile /mnt/swapfile
+          sudo -E apt-get -y update
+          sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
+          sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
+          sudo -E systemctl daemon-reload
+          sudo -E apt-get -y autoremove --purge
+          sudo -E apt-get clean
+          sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
+          sudo rm -rf ~/{.cargo,.dotnet,.rustup}
+          sudo timedatectl set-timezone "${{ env.TZ }}"
+          echo "status=success" >> ${GITHUB_OUTPUT}
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          path: origin
+          fetch-depth: 1
+
+      - name: Setup Build Variables
+        id: variables
+        run: |
+          MATRIXTARGET="${{ matrix.target }}"
+          echo "MATRIXTARGET=$MATRIXTARGET" >> $GITHUB_ENV
+
+          NAMA_MODIFIED=$(echo $MATRIXTARGET | sed 's/ /-/g')
+          echo "NAMA_MODIFIED=$NAMA_MODIFIED" >> $GITHUB_ENV
+
+          case $BASE in
+            openwrt)
+              OP_BASE="OpenWrt"
+              echo "OP_BASE=$OP_BASE" >> $GITHUB_ENV
+              ;;
+            immortalwrt)
+              OP_BASE="ImmortalWrt"
+              echo "OP_BASE=$OP_BASE" >> $GITHUB_ENV
+              ;;
+          esac
+
+          # Target system configurations
+          echo "PROFILE=generic" >> $GITHUB_ENV
+          echo "TARGET_SYSTEM=armsr/armv8" >> $GITHUB_ENV
+          echo "TARGET_NAME=armsr-armv8" >> $GITHUB_ENV
+          echo "ARCH_1=arm64" >> $GITHUB_ENV
+          echo "ARCH_2=aarch64" >> $GITHUB_ENV
+          echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
+
+          case "$MATRIXTARGET" in
+            "Allwinner H5 Orange Pi Zero Plus")
+                KERNEL="6.6.6-AW64-DBAI"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="h5-orangepi-zeroplus"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            "Allwinner H5 Orange Pi Zero Plus2")
+                KERNEL="6.6.6-AW64-DBAI"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="h5-orangepi-zeroplus2"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            "Allwinner H6 Orange Pi 3")
+                KERNEL="6.1.31-AW64-DBAI"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="h6-orangepi-3"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            "Allwinner H6 Orange Pi 3 LTS")
+                KERNEL="6.1.31-AW64-DBAI"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="h6-orangepi-3lts"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            "Allwinner H616 Orange Pi Zero2")
+                KERNEL="6.1.31-AW64-DBAI"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="h616-orangepi-zero2"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            "Allwinner H618 Orange Pi Zero3")
+                KERNEL="6.1.31-AW64-DBAI"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="h618-orangepi-zero3"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            "Amlogic B860Hv5 v1")
+                KERNEL="6.1.66-DBAI"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="s905x2-b860hv5"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            "Amlogic B860Hv5 v2")
+                KERNEL="6.2.2"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="s905x2-b860hv5"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            "Amlogic B860Hv5 v3")
+                KERNEL="6.4.11"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="s905x2-b860hv5"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            "Amlogic HG680-FJ v1")
+                KERNEL="6.1.66-DBAI"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="s905x2-hg680-fj"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            "Amlogic HG680-FJ v2")
+                KERNEL="6.2.2"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="s905x2-hg680-fj"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            "Amlogic HG680-FJ v3")
+                KERNEL="6.4.11"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="s905x2-hg680-fj"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            "Amlogic s905x4 v1")
+                KERNEL="6.1.66-DBAI"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="s905x4"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            "Amlogic s905x4 v2")
+                KERNEL="5.4.279"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="s905x4"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            "Amlogic s905x4 v3")
+                KERNEL="6.6.6"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="s905x4"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            "Amlogic s905x4 v4")
+                KERNEL="6.6.66"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="s905x4"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+            "Rockchip rk3566 Orange Pi 3B")
+                KERNEL="5.10.160-rk35v-dbai"
+                echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+                TARGET_BUILD="rk3566-orangepi-3b"
+                echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+                ;;
+          esac
+
+          echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Download and Prepare Image Builder
+        id: download
+        if: steps.variables.outputs.status == 'success'
+        run: |
+          # Determine archive extension based on version
+          CURVER=$(echo "${{ env.BRANCH }}" | cut -d'.' -f1)
+          archive_ext=$([ "${CURVER}" == "24" ] && echo "tar.zst" || echo "tar.xz")
+
+          # Download image builder
+          RELEASE="${{ env.DOWNLOAD_BASE }}/releases/${{ env.BRANCH }}/targets/${{ env.TARGET_SYSTEM }}/${{ env.BASE }}-imagebuilder-${{ env.BRANCH }}-${{ env.TARGET_NAME }}.Linux-x86_64.${archive_ext}"
+          echo "Downloading from: $RELEASE"
+          wget --progress=dot:giga "$RELEASE"
+
+          # Extract archive based on extension
+          case "${archive_ext}" in
+            tar.xz)
+              tar -xJf *-imagebuilder-* && rm -f *-imagebuilder-*.tar.xz
+              ;;
+            tar.zst)
+              tar --use-compress-program=unzstd -xf *-imagebuilder-* && rm -f *-imagebuilder-*.tar.zst
+              ;;
+          esac
+
+          # Setup working directory
+          mv *-imagebuilder-* ${{ env.WORKING_DIR }}
+          cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/${{ env.WORKING_DIR }}
+
+          echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Download External Packages
+        id: packages
+        if: steps.download.outputs.status == 'success'
+        run: |
+          cd ${{ env.WORKING_DIR }}
+          chmod +x scripts/PACKAGES.sh
+          ./scripts/PACKAGES.sh
+
+          echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Apply Patches and Customizations
+        id: customize
+        if: steps.packages.outputs.status == 'success'
+        run: |
+          cd ${{ env.WORKING_DIR }}
+
+          # Apply patches
+          chmod +x scripts/PATCH.sh
+          ./scripts/PATCH.sh
+
+          # Apply miscellaneous changes
+          chmod +x scripts/MISC.sh
+          ./scripts/MISC.sh
+
+          # Configure tunnel apps
+          chmod +x scripts/TUNNEL.sh
+          ./scripts/TUNNEL.sh ${{ env.TUNNEL }}
+
+          df -hT ${PWD}
+          echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Build Firmware Images
+        id: build
+        if: steps.customize.outputs.status == 'success'
+        run: |
+          cd ${{ env.WORKING_DIR }}
+          mkdir -p compiled_images
+          chmod +x make-image.sh
+
+          # Clean if requested
+          if [ "${{ env.CLEAN }}" == "true" ]; then
+            make clean
+          fi
+            
+          # Build image
+          time ./make-image.sh ${{ env.PROFILE }} ${{ env.TUNNEL }}
+            
+          # Move and rename output files
+          for file in bin/targets/"${{ env.TARGET_SYSTEM }}"/*-rootfs.tar.gz; do
+            if [ -f "$file" ]; then
+              new_name="XIDZ-WRT_$(basename "$file" -rootfs.tar.gz)_${{ env.TUNNEL }}-rootfs.tar.gz"
+              mv "$file" compiled_images/$new_name
+            fi
+          done
+
+          echo "Images built successfully:"
+          ls -la compiled_images/
+          echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Repack OpenWrt
+        id: repack
+        if: steps.build.outputs.status == 'success'
+        run: |
+          cd ${{ env.WORKING_DIR }}
+          chmod +x scripts/REPACKWRT.sh
+          ./scripts/REPACKWRT.sh "ulo" "$TARGET_BUILD" "$KERNEL" "${{ env.TUNNEL }}"
+          echo "status=success" >> $GITHUB_OUTPUT
+          
+      - name: Mod SDCard
+        id: modsdcard
+        if: steps.repack.outputs.status == 'success'
+        run: |
+          cd ${{ env.WORKING_DIR }}
+          chmod +x scripts/MODSDCARD.sh
+          ./scripts/MODSDCARD.sh
+          echo "status=success" >> $GITHUB_OUTPUT
+          
+      - name: Before Upload
+        id: beforeupload
+        if: steps.modsdcard.outputs.status == 'success'
+        run: |
+          cd ${{ env.WORKING_DIR }}
+          chmod +x scripts/RENAMEFW.sh
+          ./scripts/RENAMEFW.sh
+          echo "status=success" >> "$GITHUB_OUTPUT"
+
+      - name: Create Release
+        if: steps.beforeupload.outputs.status == 'success'
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_NAME }}
+          files: ${{ env.WORKING_DIR }}/compiled_images/*.img.gz
+          prerelease: ${{ github.ref_name == 'dev' }}

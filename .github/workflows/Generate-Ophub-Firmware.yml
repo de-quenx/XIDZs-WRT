@@ -1,0 +1,627 @@
+name: Generate Ophub Firmware
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_branch:
+        description: "Select the release branch:"
+        required: true
+        default: "openwrt:24.10.2"
+        type: choice
+        options:
+          - openwrt:24.10.2
+          - openwrt:24.10.1
+          - openwrt:23.05.5
+          - immortalwrt:24.10.2
+          - immortalwrt:24.10.1
+          - immortalwrt:23.05.4
+      target:
+        description: "Select device board"
+        required: false
+        default: "all-device"
+        type: choice
+        options:
+          - all-device
+          - Amlogic s905 MXQ-Pro+
+          - Amlogic s905lb Q96-mini
+          - Amlogic s905w TX3-Mini
+          - Amlogic s905w X96-Mini
+          - Amlogic s905x B860H
+          - Amlogic s905x B860H MODSDCARD
+          - Amlogic s905x HG680P
+          - Amlogic s905x HG680P MODSDCARD
+          - Amlogic s905x2 B860Hv5
+          - Amlogic s905x2 HG680-FJ
+          - Amlogic s905x2 X96Max-v2Gb
+          - Amlogic s905x2 X96Max-v4Gb
+          - Amlogic s905x3 HK1-Vontar-X3
+          - Amlogic s905x3 X96Air_100mb
+          - Amlogic s905x3 X96Air_1Gb
+          - Amlogic s905x3 X96Max+_100Mb
+          - Amlogic s905x3 X96Max+_1Gb
+          - Amlogic s905x4 Advan
+          - Amlogic s912 Nexbox-A1-A95X
+          - Amlogic s912 Nexbox-A95X-A2
+          - Amlogic s922x GT-King-Pro
+          - Firefly-RK3328
+          - RK3318-BOX
+      tunnel:
+        description: "Select Tunnel VPN"
+        required: true
+        default: "openclash"
+        type: choice
+        options:
+          - openclash
+          - openclash-nikki
+          - openclash-nikki-passwall
+          - no-tunnel
+      clean:
+        description: "Do 'make clean' for each run"
+        required: false
+        default: "true"
+        type: boolean
+
+env:
+  TZ: Asia/Jakarta
+  WORKING_DIR: imagebuilder
+  DEBIAN_FRONTEND: noninteractive
+  RELEASE_BRANCH: ${{ github.event.inputs.release_branch }}
+  TARGET: ${{ github.event.inputs.target }}
+  TUNNEL: ${{ github.event.inputs.tunnel }}
+  CLEAN: ${{ github.event.inputs.clean }}
+
+jobs:
+  prebuild:
+    runs-on: ubuntu-22.04
+    name: ${{ github.event.inputs.release_branch }}
+    outputs:
+      target: ${{ steps.set-matrix.outputs.target }}
+      type: ${{ steps.setupenv.outputs.type }}
+      base: ${{ steps.setupenv.outputs.base }}
+      branch: ${{ steps.setupenv.outputs.branch }}
+      verop: ${{ steps.setupenv.outputs.verop }}
+      download_base: ${{ steps.setupenv.outputs.download_base }}
+      date: ${{ steps.setupenv.outputs.date }}
+      datetime: ${{ steps.setupenv.outputs.datetime }}
+      datemonth: ${{ steps.setupenv.outputs.datemonth }}
+      release_name: ${{ steps.setupenv.outputs.release_name }}
+      release_tag: ${{ steps.setupenv.outputs.release_tag }}
+    steps:       
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Set Matrix Run
+        id: set-matrix
+        run: |
+          echo "Selected target option: [ ${{ github.event.inputs.target }} ]"
+          TARGET_JSON=$(cat << 'EOJ'
+          {
+            "target": [
+              "Amlogic s905 MXQ-Pro+",
+              "Amlogic s905lb Q96-mini",
+              "Amlogic s905w TX3-Mini",
+              "Amlogic s905w X96-Mini",
+              "Amlogic s905x B860H",
+              "Amlogic s905x B860H MODSDCARD",
+              "Amlogic s905x HG680P",
+              "Amlogic s905x HG680P MODSDCARD",
+              "Amlogic s905x2 B860Hv5",
+              "Amlogic s905x2 HG680-FJ",
+              "Amlogic s905x2 X96Max-v2Gb",
+              "Amlogic s905x2 X96Max-v4Gb",
+              "Amlogic s905x3 HK1-Vontar-X3",
+              "Amlogic s905x3 X96Air_100mb",
+              "Amlogic s905x3 X96Air_1Gb",
+              "Amlogic s905x3 X96Max+_100Mb",
+              "Amlogic s905x3 X96Max+_1Gb",
+              "Amlogic s905x4 Advan",
+              "Amlogic s912 Nexbox-A1-A95X",
+              "Amlogic s912 Nexbox-A95X-A2",
+              "Amlogic s922x GT-King-Pro",
+              "Firefly-RK3328",
+              "RK3318-BOX"
+            ]
+          }
+          EOJ
+          )
+
+          if [ "${{ github.event.inputs.target }}" == "all-device" ]; then
+            echo "target=$(echo "$TARGET_JSON" | jq -c '.target')" >> $GITHUB_OUTPUT
+          else
+            echo "target=$(jq -nc --arg d "${{ github.event.inputs.target }}" '[$d]')" >> $GITHUB_OUTPUT
+          fi
+
+          echo "Selected tunnel option: [ ${{ github.event.inputs.tunnel }} ]"
+
+      - name: Setup Release Environment
+        id: setupenv
+        run: |
+          sudo timedatectl set-timezone "${{ env.TZ }}"
+
+          TYPE="OPHUB"
+          echo "type=$TYPE" >> $GITHUB_OUTPUT
+
+          BASE="${RELEASE_BRANCH%:*}"
+          BRANCH="${RELEASE_BRANCH#*:}"
+          VEROP="$(echo "${BRANCH}" | awk -F. '{print $1"."$2}')"
+
+          echo "base=$BASE" >> $GITHUB_OUTPUT
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          echo "verop=$VEROP" >> $GITHUB_OUTPUT
+          echo "download_base=https://downloads.${BASE}.org" >> $GITHUB_OUTPUT
+
+          DATE=$(date +'%d%m%Y')
+          DATETIME=$(date +'%d.%m.%Y-%H:%M:%S')
+          DATEMONTH=$(date +"%B-%Y" | awk '{print tolower($0)}')
+
+          echo "date=$DATE" >> $GITHUB_OUTPUT
+          echo "datetime=$DATETIME" >> $GITHUB_OUTPUT
+          echo "datemonth=$DATEMONTH" >> $GITHUB_OUTPUT
+
+          if [ "${BASE}" == "openwrt" ]; then
+            RELEASE_NAME="Ophub-OpenWRT-${BRANCH}-${DATE}"
+            RELEASE_TAG="ophub-openwrt-${BRANCH}-${DATE}"
+            echo "release_name=$RELEASE_NAME" >> $GITHUB_OUTPUT
+            echo "release_tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
+          elif [ "${BASE}" == "immortalwrt" ]; then
+            RELEASE_NAME="Ophub-ImmortalWRT-${BRANCH}-${DATE}"
+            RELEASE_TAG="ophub-immortalwrt-${BRANCH}-${DATE}"
+            echo "release_name=$RELEASE_NAME" >> $GITHUB_OUTPUT
+            echo "release_tag=$RELEASE_TAG" >> $GITHUB_OUTPUT
+          fi
+          echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        if: steps.setupenv.outputs.status == 'success'
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.setupenv.outputs.release_tag }}
+          name: ${{ steps.setupenv.outputs.release_name }}
+          prerelease: ${{ github.ref_name == 'dev' }}
+          body: |
+            ## XIDZs-WRT INFORMATION ##
+            - Default IP: 192.168.1.1
+            - Default username: root
+            - Default password: xyyraa
+            - Default WIFI: XIDZs-WRT | XIDZs-WRT_5G
+            - Default WIFI Password: XIDZs2025
+            ## Supported Devices ##
+            ## Amlogic Series
+            - **S905**: MXQ-Pro+
+            - **S905D**: Phicomm-N1
+            - **S905L**: B860AV2, Mibox-4
+            - **S905W**: TX3-Mini, X96-Mini
+            - **S905X**: B860H, HG680P (with MODSDCARD variants)
+            - **S905LB**: Q96-mini
+            - **S905L2**: M301A, MGV-M301A
+            - **S905L3**: HG680-LC
+            - **S905L3A**: B863AV3
+            - **S905L3B**: MGV2000
+            - **S912**: Nexbox-A1-A95X, Nexbox-A95X-A2
+            - **S905X2**: B860Hv5, HG680-FJ, X96Max variants
+            - **S905X3**: HK1-Vontar-X3, X96Air variants, X96Max+ variants
+            - **S905X4**: Advan AT01, Akari AX810
+            - **S922X**: GT-King-Pro
+            
+            ## Rockchip Series
+            - **RK3318**: RK3318-BOX
+            - **RK3328**: Firefly-RK3328
+            
+            ## FEATURES
+            - Tema Alpha ⨯ Tema Argon ⨯ Tema Material
+            - Amlogic Service ⨯ Droidnet
+            - 3ginfo-Lite ⨯ Modeminfo ⨯ IP Information
+            - FIX TTL ⨯ Tailscale
+            - Eqosplus ⨯ Mactodong
+            - GPIO LED Support
+            - MOD-SDCARD Support
+            - Internet Detector ⨯ Connection Monitor
+            - Support Modem Rakitan ⨯ Auto Reconnect
+            - Auto Time Sync ⨯ File Manager
+            - Config Openclash ⨯ Nikki ⨯ Passwall
+            ## TUNNEL OPTIONS
+            - OpenClash
+            - OpenClash + Nikki
+            - OpenClash + Nikki + Passwall
+            - No Tunnel         
+            ## KERNEL STABLE VERSION
+            - Kernel v5.15 ⨯ WIFI ON
+            - Kernel v6.1 ⨯ WIFI ON
+            - Kernel v6.6 ⨯ WIFI ON
+            - Kernel v6.12 ⨯ WIFI OFF
+
+  build-firmware:
+    name: Build ${{ matrix.target }} Firmware
+    needs: prebuild
+    runs-on: ubuntu-22.04
+    env:
+      TYPE: ${{ needs.prebuild.outputs.type }}
+      BASE: ${{ needs.prebuild.outputs.base }}
+      BRANCH: ${{ needs.prebuild.outputs.branch }}
+      VEROP: ${{ needs.prebuild.outputs.verop }}
+      DOWNLOAD_BASE: ${{ needs.prebuild.outputs.download_base }}
+      DATE: ${{ needs.prebuild.outputs.date }}
+      DATETIME: ${{ needs.prebuild.outputs.datetime }}
+      DATEMONTH: ${{ needs.prebuild.outputs.datemonth }}
+      RELEASE_NAME: ${{ needs.prebuild.outputs.release_name }}
+      RELEASE_TAG: ${{ needs.prebuild.outputs.release_tag }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJSON(needs.prebuild.outputs.target) }}
+
+    steps:
+          
+      - name: Initialization environment
+        id: init
+        run: |
+          docker rmi $(docker images -q) 2>/dev/null
+          [[ -n "${AGENT_TOOLSDIRECTORY}" ]] && sudo rm -rf "${AGENT_TOOLSDIRECTORY}"
+          sudo rm -rf /usr/share/dotnet /etc/apt/sources.list.d /usr/local/lib/android 2>/dev/null
+          sudo swapoff -a
+          sudo rm -f /swapfile /mnt/swapfile
+          sudo -E apt-get -y update
+          sudo -E apt-get -y purge azure-cli ghc* zulu* llvm* firefox google* dotnet* powershell openjdk* mongodb* moby* || true
+          sudo -E apt-get -y install $(curl -fsSL https://tinyurl.com/ubuntu2204-make-openwrt)
+          sudo -E systemctl daemon-reload
+          sudo -E apt-get -y autoremove --purge
+          sudo -E apt-get clean
+          sudo sed -i '/NVM_DIR/d;/skel/d' /root/{.bashrc,.profile}
+          sudo rm -rf ~/{.cargo,.dotnet,.rustup}
+          sudo timedatectl set-timezone "${{ env.TZ }}"
+          echo "status=success" >> ${GITHUB_OUTPUT}
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          path: origin
+          fetch-depth: 1
+
+      - name: Setup Build Variables
+        id: variables
+        run: |
+          MATRIXTARGET="${{ matrix.target }}"
+          echo "MATRIXTARGET=$MATRIXTARGET" >> $GITHUB_ENV
+
+          NAMA_MODIFIED=$(echo $MATRIXTARGET | sed 's/ /-/g')
+          echo "NAMA_MODIFIED=$NAMA_MODIFIED" >> $GITHUB_ENV
+
+          case $BASE in
+            openwrt)
+              OP_BASE="OpenWrt"
+              echo "OP_BASE=$OP_BASE" >> $GITHUB_ENV
+              ;;
+            immortalwrt)
+              OP_BASE="ImmortalWrt"
+              echo "OP_BASE=$OP_BASE" >> $GITHUB_ENV
+              ;;
+          esac
+
+          # Target system configurations
+          echo "PROFILE=generic" >> $GITHUB_ENV
+          echo "TARGET_SYSTEM=armsr/armv8" >> $GITHUB_ENV
+          echo "TARGET_NAME=armsr-armv8" >> $GITHUB_ENV
+          echo "ARCH_1=arm64" >> $GITHUB_ENV
+          echo "ARCH_2=aarch64" >> $GITHUB_ENV
+          echo "ARCH_3=aarch64_generic" >> $GITHUB_ENV
+
+          case "$MATRIXTARGET" in
+            "Amlogic s905 MXQ-Pro+")
+              TARGET_BUILD="s905-mxqpro-plus"
+              KERNEL="5.15.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905d Phicomm-N1")
+              TARGET_BUILD="s905d"
+              KERNEL="5.15.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905l B860AV2")
+              TARGET_BUILD="s905l"
+              KERNEL="5.15.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905l Mibox-4")
+              TARGET_BUILD="s905l-mg101"
+              KERNEL="5.15.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905l2 M301A")
+              TARGET_BUILD="s905l2"
+              KERNEL="5.15.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905l2 MGV-M301A")
+              TARGET_BUILD="s905l2"
+              KERNEL="5.15.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905l3 HG680-LC")
+              TARGET_BUILD="s905l3"
+              KERNEL="5.15.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905l3a B863AV3")
+              TARGET_BUILD="s905l3a-m401a"
+              KERNEL="5.15.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905l3b MGV2000")
+              TARGET_BUILD="s905l3b-e900v22e"
+              KERNEL="5.15.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905lb Q96-mini")
+              TARGET_BUILD="s905lb-q96-mini"
+              KERNEL="5.15.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905w TX3-Mini")
+              TARGET_BUILD="s905w"
+              KERNEL="5.15.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905w X96-Mini")
+              TARGET_BUILD="s905w-x96-mini"
+              KERNEL="5.15.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905x B860H")
+              TARGET_BUILD="s905x-b860h"
+              KERNEL="5.15.y_6.1.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905x B860H MODSDCARD")
+              TARGET_BUILD="s905x-b860h"
+              KERNEL="5.15.y_6.1.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905x HG680P")
+              TARGET_BUILD="s905x"
+              KERNEL="5.15.y_6.1.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905x HG680P MODSDCARD")
+              TARGET_BUILD="s905x"
+              KERNEL="5.15.y_6.1.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905x2 B860Hv5")
+              TARGET_BUILD="s905x2-b860h-v5"
+              KERNEL="5.15.y_6.1.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905x2 HG680-FJ")
+              TARGET_BUILD="s905x2-hg680-fj"
+              KERNEL="5.15.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905x2 X96Max-v2Gb")
+              TARGET_BUILD="s905x2-x96max-2g"
+              KERNEL="5.15.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905x2 X96Max-v4Gb")
+              TARGET_BUILD="s905x2"
+              KERNEL="5.15.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905x3 HK1-Vontar-X3")
+              TARGET_BUILD="s905x3-hk1"
+              KERNEL="5.15.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905x3 X96Air_100mb")
+              TARGET_BUILD="s905x3-x96air"
+              KERNEL="5.15.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905x3 X96Air_1Gb")
+              TARGET_BUILD="s905x3-x96air-gb"
+              KERNEL="5.15.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905x3 X96Max+_100Mb")
+              TARGET_BUILD="s905x3"
+              KERNEL="5.15.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905x3 X96Max+_1Gb")
+              TARGET_BUILD="s905x3-x96max"
+              KERNEL="5.15.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s905x4 Advan")
+              TARGET_BUILD="s905x4-advan"
+              KERNEL="6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s912 Nexbox-A1-A95X")
+              TARGET_BUILD="s912-nexbox-a1"
+              KERNEL="5.15.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s912 Nexbox-A95X-A2")
+              TARGET_BUILD="s912-nexbox-a2"
+              KERNEL="5.15.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Amlogic s922x GT-King-Pro")
+              TARGET_BUILD="s922x"
+              KERNEL="5.15.y_6.6.y_6.12.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "Firefly-RK3328")
+              TARGET_BUILD="renegade-rk3328"
+              KERNEL="5.15.y_6.6.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+            "RK3318-BOX")
+              TARGET_BUILD="rk3318-box"
+              KERNEL="5.15.y_6.6.y"
+              echo "TARGET_BUILD=$TARGET_BUILD" >> $GITHUB_ENV
+              echo "KERNEL=$KERNEL" >> $GITHUB_ENV
+              ;;
+          esac
+
+          echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Download and Prepare Image Builder
+        id: download
+        if: steps.variables.outputs.status == 'success'
+        run: |
+          # Determine archive extension based on version
+          CURVER=$(echo "${BRANCH}" | cut -d'.' -f1)
+          archive_ext=$([ "${CURVER}" == "24" ] && echo "tar.zst" || echo "tar.xz")
+
+          # Download image builder
+          RELEASE="${DOWNLOAD_BASE}/releases/${BRANCH}/targets/${TARGET_SYSTEM}/${BASE}-imagebuilder-${BRANCH}-${TARGET_NAME}.Linux-x86_64.${archive_ext}"
+          echo "Downloading from: $RELEASE"
+          wget --progress=dot:giga "$RELEASE"
+
+          # Extract archive based on extension
+          case "${archive_ext}" in
+            tar.xz)
+              tar -xJf *-imagebuilder-* && rm -f *-imagebuilder-*.tar.xz
+              ;;
+            tar.zst)
+              tar --use-compress-program=unzstd -xf *-imagebuilder-* && rm -f *-imagebuilder-*.tar.zst
+              ;;
+          esac
+
+          # Setup working directory
+          mv *-imagebuilder-* ${WORKING_DIR}
+          cp -r $GITHUB_WORKSPACE/origin/* $GITHUB_WORKSPACE/${WORKING_DIR}
+
+          echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Download External Packages
+        id: packages
+        if: steps.download.outputs.status == 'success'
+        run: |
+          cd ${WORKING_DIR}
+          chmod +x scripts/PACKAGES.sh
+          ./scripts/PACKAGES.sh
+
+          echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Apply Patches and Customizations
+        id: customize
+        if: steps.packages.outputs.status == 'success'
+        run: |
+          cd ${WORKING_DIR}
+
+          # Apply patches
+          chmod +x scripts/PATCH.sh
+          ./scripts/PATCH.sh
+
+          # Apply miscellaneous changes
+          chmod +x scripts/MISC.sh
+          ./scripts/MISC.sh
+
+          # Configure tunnel apps
+          chmod +x scripts/TUNNEL.sh
+          ./scripts/TUNNEL.sh ${{ env.TUNNEL }}
+
+          df -hT ${PWD}
+          echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Build Firmware Images
+        id: build
+        if: steps.customize.outputs.status == 'success'
+        run: |
+          cd ${WORKING_DIR}
+          mkdir -p compiled_images
+          chmod +x make-image.sh
+
+          # Clean if requested
+          if [ "${CLEAN}" == "true" ]; then
+            make clean
+          fi
+            
+          # Build image
+          time ./make-image.sh ${PROFILE} ${{ env.TUNNEL }}
+            
+          # Move and rename output files
+          for file in bin/targets/"${TARGET_SYSTEM}"/*-rootfs.tar.gz; do
+            if [ -f "$file" ]; then
+              new_name="XIDZs-WRT-$(basename "$file" -rootfs.tar.gz)_${{ env.TUNNEL }}-rootfs.tar.gz"
+              mv "$file" compiled_images/$new_name
+            fi
+          done
+
+          echo "Images built successfully:"
+          ls -la compiled_images/
+          echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Repack OpenWrt
+        id: repack
+        if: steps.build.outputs.status == 'success'
+        run: |
+          cd ${WORKING_DIR}
+          chmod +x scripts/REPACKWRT.sh
+          ./scripts/REPACKWRT.sh "ophub" "$TARGET_BUILD" "$KERNEL" "${{ env.TUNNEL }}"
+          echo "status=success" >> $GITHUB_OUTPUT
+          
+      - name: Mod SDCard
+        id: modsdcard
+        if: steps.repack.outputs.status == 'success'
+        run: |
+          cd ${WORKING_DIR}
+          chmod +x scripts/MODSDCARD.sh
+          ./scripts/MODSDCARD.sh
+          echo "status=success" >> $GITHUB_OUTPUT
+          
+      - name: Before Upload
+        id: beforeupload
+        if: steps.modsdcard.outputs.status == 'success'
+        run: |
+          cd ${{ env.WORKING_DIR }}
+          chmod +x scripts/RENAMEFW.sh
+          ./scripts/RENAMEFW.sh
+          echo "status=success" >> "$GITHUB_OUTPUT"
+
+      - name: Create Release
+        if: steps.beforeupload.outputs.status == 'success'
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_NAME }}
+          files: ${{ env.WORKING_DIR }}/compiled_images/*.img.gz
+          prerelease: ${{ github.ref_name == 'dev' }}
