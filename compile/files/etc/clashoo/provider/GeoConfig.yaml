@@ -1,0 +1,254 @@
+# ================== GENERAL SETTINGS ==================
+port: 8080
+socks-port: 1080
+redir-port: 7891
+mixed-port: 7890
+tproxy-port: 7892
+ipv6: false
+mode: rule
+log-level: info
+allow-lan: true
+external-controller: 0.0.0.0:9090
+secret: "xidz"
+unified-delay: true
+tcp-concurrent: true
+
+profile:
+  store-selected: true
+  store-fake-ip: true
+
+# ================== SNIFFING ==================
+sniffing:
+  enable: true
+  sniff:
+    tls:
+      ports: [443, 8443]
+    http:
+      ports: [80, 8080-8880]
+  force-dns-mapping: true
+
+# ================== TUN (Dioptimalkan untuk Stabilitas) ==================
+tun:
+  enable: true
+  stack: mixed             # Menggunakan mixed agar perpindahan TCP/UDP lebih mulus
+  dns-hijack:
+    - "any:53"
+  auto-route: true         # Diubah ke true agar Mihomo menghandle routing secara otomatis
+  auto-redirect: true
+  strict-route: true       # Mengurangi kebocoran DNS (DNS Leak)
+  mtu: 1420 
+  endpoint-independent-nat: true
+  gso: true                # Mengaktifkan GSO untuk throughput yang lebih baik
+  device: mihomo
+  gso-max-size: 65536
+
+# ================== DNS (Disempurnakan untuk Kecepatan CDN Meta) ==================
+dns:
+  enable: true
+  ipv6: false
+  enhanced-mode: fake-ip
+  listen: '0.0.0.0:1053'
+  fake-ip-range: 198.18.0.1/16
+  respect-rules: true
+  use-system-hosts: true
+  default-nameserver:
+    - 1.1.1.1
+    - 8.8.8.8
+  proxy-server-nameserver:
+    - https://1.1.1.1/dns-query
+  nameserver:
+    - 1.1.1.1
+    - 8.8.8.8
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+    - tls://1.0.0.1
+  fallback:
+    - https://dns.cloudflare.com/dns-query
+    - https://dns.google/dns-query
+  fallback-filter:
+    geoip: true
+    geoip-code: ID
+    ipcidr:
+      - 240.0.0.0/4
+  prefer-h3: true
+  use-hosts: true
+
+# ================== PROXY & RULES (Dipertahankan) ==================
+proxy-providers:
+  ID:
+    type: file
+    path: "./proxyprovider/ID.yaml"
+    health-check:
+      enable: true
+      url: http://ping.xmbb.net/
+      interval: 300
+  SG:
+    type: file
+    path: "./proxyprovider/SG.yaml"
+    health-check:
+      enable: true
+      url: http://ping.xmbb.net/
+      interval: 300
+  WK:
+    type: file
+    path: "./proxyprovider/WK.yaml"
+    health-check:
+      enable: true
+      url: http://ping.xmbb.net/
+      interval: 300
+
+proxy-groups:
+  - name: VPN
+    type: select
+    icon: https://i.imgur.com/Mis5ANQ.png
+    interval : 30
+    url : http://ping.xmbb.net/
+    use:
+      - ID
+      - SG
+      - WK
+  - name: Streaming
+    type: load-balance
+    strategy: round-robin
+    udp: true
+    icon: https://i.imgur.com/ShK5Iad.png
+    url: http://ping.xmbb.net/
+    interval: 30
+    use:
+      - SG
+  - name: Ewallet
+    type: select
+    icon: https://i.imgur.com/WfrqX9z.png
+    use:
+      - ID
+      - WK
+  - name: Olshop
+    type: select
+    icon: https://i.imgur.com/j6AfSaP.png
+    use:
+      - ID
+      - WK
+  - name: Sosmed
+    type: select
+    icon: https://i.imgur.com/5uov1Qm.png
+    use:
+      - ID
+      - WK
+  - name: Instagram
+    type: select
+    icon: https://i.imgur.com/5uov1Qm.png
+    use:
+      - ID
+      - SG
+      - WK
+  - name: Adult
+    type: select
+    icon: https://i.imgur.com/Mis5ANQ.png
+    use:
+      - SG
+      - ID
+      - WK
+    proxies:
+      - REJECT
+  - name: Server ID
+    type: url-test
+    icon: https://i.imgur.com/Mis5ANQ.png
+    url: http://ping.xmbb.net/
+    interval: 30
+    use:
+      - ID
+  - name: Server SG
+    type: url-test
+    icon: https://i.imgur.com/Mis5ANQ.png
+    url: http://ping.xmbb.net/
+    interval: 30
+    use:
+      - SG
+
+# ================== GEODATA SETTINGS & RULES ==================
+find-process-mode: off
+keep-alive-idle: 60
+keep-alive-interval: 10
+external-ui: ui
+external-ui-name: dist
+external-ui-url: dist
+
+geodata-mode: true
+geodata-loader: memconservative
+
+geox-url:
+  geosite: "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat"
+  geoip: "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat"
+  mmdb: "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/country.mmdb"
+  asn: "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/GeoLite2-ASN.mmdb"
+
+geo-auto-update: true
+geo-update-interval: 24
+
+rules:
+  # 1. REJECT (Mencakup Blokir Iklan Saja)
+  - GEOSITE,category-ads-all,REJECT
+
+  # 2. ADULT (Mencakup Situs Dewasa)
+  - GEOSITE,category-porn,Adult
+  - DOMAIN-KEYWORD,pornhub,Adult
+  - DOMAIN-KEYWORD,doodstream,Adult
+
+  # 3. STREAMING (Netflix, Youtube, Vidio, Iflix, Spotify, Joox, Deezer, Twitch, Doodstream)
+  - GEOSITE,netflix,Streaming
+  - GEOSITE,youtube,Streaming
+  - GEOSITE,bilibili,Streaming
+  - GEOSITE,twitch,Streaming
+  - GEOSITE,spotify,Streaming
+  - DOMAIN-KEYWORD,joox,Streaming
+  - DOMAIN-KEYWORD,deezer,Streaming
+  - DOMAIN-KEYWORD,vidio,Streaming
+  - DOMAIN-KEYWORD,iflix,Streaming
+  - DOMAIN-KEYWORD,dood,Streaming
+
+  # 4. INSTAGRAM (Grup Terpisah Bawaan Config Kamu)
+  - GEOSITE,instagram,Instagram
+
+  # 5. SOSMED (WhatsApp, Facebook, Line, Telegram, Twitter/X, TikTok)
+  - GEOSITE,whatsapp,Sosmed
+  - GEOSITE,facebook,Sosmed
+  - GEOSITE,line,Sosmed
+  - GEOSITE,telegram,Sosmed
+  - GEOSITE,twitter,Sosmed
+  - GEOSITE,tiktok,Streaming
+
+  # 6. OLSHOP (Tokopedia, Shopee, Lazada, TikTok Shop)
+  - DOMAIN-KEYWORD,tokopedia,Olshop
+  - DOMAIN-KEYWORD,shopee,Olshop
+  - DOMAIN-KEYWORD,lazada,Olshop
+
+  # 7. EWALLET & PROVIDER INDO (Dana, Gopay, Ovo, ShopeePay, Bank Indonesia, Telkomsel, XL, Tri, Indosat)
+  - DOMAIN-KEYWORD,dana,Ewallet
+  - DOMAIN-KEYWORD,klikbca,Ewallet
+  - DOMAIN-KEYWORD,bca,Ewallet
+  - DOMAIN-KEYWORD,gojek,Ewallet
+  - DOMAIN-KEYWORD,gopay,Ewallet
+  - DOMAIN-KEYWORD,ovo,Ewallet
+  - DOMAIN-KEYWORD,shopeepay,Ewallet
+  - DOMAIN-SUFFIX,gov.id,Ewallet
+  - DOMAIN-KEYWORD,telkomsel,Ewallet
+  - DOMAIN-KEYWORD,xl-axiata,Ewallet
+  - DOMAIN-KEYWORD,three,Ewallet
+  - DOMAIN-KEYWORD,indosatooredoo,Ewallet
+
+  # 8. CHESS.COM
+  - DOMAIN-KEYWORD,chess,Server ID
+
+  # 9. GEOIP: Semua IP Indonesia dilempar ke VPN Server ID
+  - GEOIP,ID,Server ID,no-resolve
+  - GEOSITE,google,Server ID
+
+  # 10. LOCAL TRAFFIC / LAN
+  - GEOIP,private,DIRECT,no-resolve
+
+  # 11. MATCH: Sisa traffic global/luar negeri otomatis masuk ke grup utama
+  - MATCH,VPN
+
+authentication:
+  - mihomo:xidz
+  

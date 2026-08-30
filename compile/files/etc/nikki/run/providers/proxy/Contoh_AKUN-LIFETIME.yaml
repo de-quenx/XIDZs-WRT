@@ -1,0 +1,83 @@
+# AKUN CLOUDFLARE KONFIGURASI
+# FORMAT VLESS WS DAN TROJAN WS NEW ALL TLS
+FORMAT1: &VL_SSL_WC
+  port: 443
+  type: vless
+  cipher: auto
+  tls: true
+  udp: true
+  skip-cert-verify: true
+  network: ws
+
+FORMAT2: &VL_WS
+  port: 80
+  type: vless
+  cipher: auto
+  tls: false
+  udp: true
+  skip-cert-verify: true
+  network: ws
+
+FORMAT3: &TR_WS
+  type: trojan
+  port: 443
+  network: ws
+  skip-cert-verify: true
+  udp: true
+
+BUG:
+ - &bug1 bug.com
+ - &bug2
+ - &bug3 
+ 
+CLOUDFLARE KEY:
+ - &key1 75ca22b8-9ad0-423e-a9c0-20e02051e6ac
+ - &key2 
+ - &key3 
+ - &key4 
+ - &key5 
+ - &key6 
+
+PROXY IP:
+ - &id1 divarcdn.com
+ - &id2
+ - &id3 
+ - &id4
+ - &id5
+ - &sg1
+ - &sg2 
+ - &sg3
+ - &sg4 
+ - &sg5 
+ - &sg6
+
+PATH AKUN:
+ - &cf1 /id-amz
+ - &cf2 
+ - &cf3 
+ - &cf4 
+ - &cf4 
+ - &cf6 
+ 
+WILCARD:
+ - &wild1 bug.com.divarcdn.com
+ - &wild2
+ - &wild3
+ - &wild4
+ - &wild5 
+ - &wild6 
+
+#######################################################
+# name tidak boleh sama per 1 proxy sm lain (biar ping di control ga nabrak)
+# jangan pakai SIMBOL ATOPUN EMOJI nanti kadang eror!!
+
+proxies:
+  - name: XIDZ
+    <<: *VL_WS
+    server: *id1
+    servername: *bug1
+    uuid: *key1
+    ws-opts:
+      path: *cf1
+      headers:
+        Host: *bug1

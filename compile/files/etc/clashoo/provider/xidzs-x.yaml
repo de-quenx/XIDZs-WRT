@@ -1,0 +1,137 @@
+proxy-providers:
+  ID:
+    type: file
+    path: "./proxyprovider/id.yaml"
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 120
+  MIX:
+    type: file
+    path: "./proxyprovider/mix.yaml"
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 120
+proxy-groups:
+  - name: AUTO-ID-MIX
+    type: fallback
+    disable-udp: false
+    use:
+      - ID
+      - MIX
+    url: http://www.gstatic.com/generate_204
+    interval: 120
+  - name: LB-MIX-ID
+    type: load-balance
+    strategy: consistent-hashing
+    disable-udp: false
+    use:
+      - MIX
+      - ID
+    url: http://www.gstatic.com/generate_204
+    interval: 120
+  - name: SERVER-UMUM
+    type: select
+    disable-udp: false
+    proxies:
+      - AUTO-ID-MIX
+      - LB-MIX-ID
+      - DIRECT
+  - name: SERVER-INDO
+    type: select
+    disable-udp: false
+    proxies:
+      - AUTO-ID-MIX
+      - DIRECT
+  - name: SERVER-GAME
+    type: select
+    disable-udp: false
+    proxies:
+      - AUTO-ID-MIX
+      - DIRECT
+  - name: BLOCK-IKLAN
+    type: select
+    disable-udp: false
+    proxies:
+      - REJECT
+      - SERVER-UMUM
+rule-providers:
+  Game:
+    type: file
+    behavior: classical
+    path: "./ruleprovider/game.yaml"
+  PortGame:
+    type: file
+    behavior: classical
+    path: "./ruleprovider/portgame.yaml"
+  Umum:
+    type: file
+    behavior: classical
+    path: "./ruleprovider/umum.yaml"
+  indo:
+    type: file
+    behavior: classical
+    path: "./ruleprovider/indo.yaml"
+  Sosmed:
+    type: file
+    behavior: classical
+    path: "./ruleprovider/sosmed.yaml"
+  Streaming:
+    type: file
+    behavior: classical
+    path: "./ruleprovider/streaming.yaml"
+  Bankid:
+    type: file
+    behavior: domain
+    path: "./ruleprovider/bankid.yaml"
+  Tiktok:
+    type: file
+    behavior: domain
+    path: "./ruleprovider/tiktok.yaml"
+  Meta:
+    type: file
+    behavior: domain
+    path: "./ruleprovider/meta.yaml"
+rules:
+  - RULE-SET,Umum,SERVER-UMUM
+  - RULE-SET,Game,SERVER-GAME
+  - RULE-SET,PortGame,SERVER-GAME
+  - RULE-SET,indo,SERVER-INDO
+  - RULE-SET,Sosmed,SERVER-INDO
+  - RULE-SET,Streaming,SERVER-UMUM
+  - RULE-SET,Bankid,SERVER-INDO
+  - RULE-SET,Tiktok,SERVER-UMUM
+  - RULE-SET,Meta,SERVER-INDO
+  - MATCH,SERVER-UMUM
+dns:
+  enable: true
+  listen: '0.0.0.0:1053'
+  ipv6: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter-mode: blacklist
+  fake-ip-filter:
+    - "*.lan"
+    - "*.local"
+  respect-rules: true
+  use-hosts: true
+  use-system-hosts: true
+  default-nameserver:
+    - 1.1.1.1
+    - 8.8.8.8
+  nameserver:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+    - tls://1.0.0.1
+  fallback:
+    - https://dns.cloudflare.com/dns-query
+    - https://dns.google/dns-query
+    - tls://8.8.4.4
+  proxy-server-nameserver:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+  fallback-filter:
+    ipcidr:
+      - 240.0.0.0/4
+  prefer-h3: false

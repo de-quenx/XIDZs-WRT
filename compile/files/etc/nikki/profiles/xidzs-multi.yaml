@@ -1,0 +1,183 @@
+mode: rule
+log-level: info
+ipv6: false
+allow-lan: true
+unified-delay: true
+tcp-concurrent: true
+profile:
+  store-selected: true
+  store-fake-ip: true
+sniffing:
+  enable: true
+  sniff:
+    tls:
+      ports:
+        - 443
+        - 8443
+    http:
+      ports:
+        - 80
+        - 8080-8880
+  force-dns-mapping: true
+tun:
+  enable: true
+  stack: mixed
+  device: nikki
+  dns-hijack:
+    - any:53
+    - tcp://any:53
+  auto-route: true
+  auto-redirect: true
+  strict-route: true
+  mtu: 1420
+  endpoint-independent-nat: true
+find-process-mode: off
+keep-alive-idle: 60
+keep-alive-interval: 10
+proxy-providers:
+  MIX:
+    type: file
+    path: "./providers/proxy/mix.yaml"
+    health-check:
+      enable: true
+      url: https://www.gstatic.com/generate_204
+      interval: 120
+proxy-groups:
+  - name: AUTO-MIX
+    type: fallback
+    disable-udp: false
+    use:
+      - MIX
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+  - name: SERVER-UMUM
+    type: select
+    disable-udp: false
+    proxies:
+      - AUTO-MIX
+      - DIRECT
+  - name: SERVER-GAME
+    type: select
+    disable-udp: false
+    proxies:
+      - SERVER-UMUM
+      - DIRECT
+  - name: FB-IG-LINE
+    type: select
+    disable-udp: false
+    proxies:
+      - DIRECT
+      - SERVER-UMUM
+  - name: WHATSAPP
+    type: select
+    disable-udp: false
+    proxies:
+      - DIRECT
+      - SERVER-UMUM
+  - name: YOUTUBE
+    type: select
+    disable-udp: false
+    proxies:
+      - DIRECT
+      - SERVER-UMUM
+  - name: NETFLIX
+    type: select
+    disable-udp: false
+    proxies:
+      - DIRECT
+      - SERVER-UMUM
+  - name: TIKTOK
+    type: select
+    disable-udp: false
+    proxies:
+      - DIRECT
+      - SERVER-UMUM
+rule-providers:
+  bankid:
+    type: file
+    behavior: domain
+    path: "./providers/rule/bankid.yaml"
+  game:
+    type: file
+    behavior: classical
+    path: "./providers/rule/game.yaml"
+  portgame:
+    type: file
+    behavior: classical
+    path: "./providers/rule/portgame.yaml"
+  umum:
+    type: file
+    behavior: classical
+    path: "./providers/rule/umum.yaml"
+  whatsapp:
+    type: file
+    behavior: classical
+    path: "./providers/rule/whatsapp.yaml"
+  youtube:
+    type: file
+    behavior: classical
+    path: "./providers/rule/youtube.yaml"
+  fb:
+    type: file
+    behavior: classical
+    path: "./providers/rule/fb.yaml"
+  meta:
+    type: file
+    behavior: classical
+    path: "./providers/rule/meta.yaml"
+  ig:
+    type: file
+    behavior: classical
+    path: "./providers/rule/ig.yaml"
+  line:
+    type: file
+    behavior: classical
+    path: "./providers/rule/line.yaml"
+  netflix:
+    type: file
+    behavior: classical
+    path: "./providers/rule/netflix.yaml"
+  tiktok:
+    type: file
+    behavior: classical
+    path: "./providers/rule/tiktok.yaml"
+rules:
+  - RULE-SET,whatsapp,WHATSAPP
+  - RULE-SET,line,FB-IG-LINE
+  - RULE-SET,fb,FB-IG-LINE
+  - RULE-SET,meta,FB-IG-LINE
+  - RULE-SET,ig,FB-IG-LINE
+  - RULE-SET,youtube,YOUTUBE
+  - RULE-SET,netflix,NETFLIX
+  - RULE-SET,tiktok,TIKTOK
+  - RULE-SET,umum,SERVER-UMUM
+  - RULE-SET,game,SERVER-GAME
+  - RULE-SET,portgame,SERVER-GAME
+  - RULE-SET,bankid,SERVER-UMUM
+  - MATCH,SERVER-UMUM
+dns:
+  enable: true
+  ipv6: false
+  enhanced-mode: fake-ip
+  listen: 0.0.0.0:1053
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter-mode: blacklist
+  fake-ip-filter:
+    - "*.lan"
+    - "*.local"
+  respect-rules: true
+  use-system-hosts: true
+  default-nameserver:
+    - 1.1.1.1
+    - 8.8.8.8
+  proxy-server-nameserver:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+  nameserver:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+    - tls://1.0.0.1
+  fallback:
+    - https://dns.cloudflare.com/dns-query
+    - https://dns.google/dns-query
+  prefer-h3: false

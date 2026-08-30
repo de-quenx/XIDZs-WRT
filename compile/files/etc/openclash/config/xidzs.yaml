@@ -1,0 +1,113 @@
+proxy-providers:
+  MIX:
+    type: file
+    path: "./proxy_provider/mix.yaml"
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 120
+proxy-groups:
+  - name: AUTO-MIX
+    type: fallback
+    disable-udp: false
+    use:
+      - MIX
+    url: http://www.gstatic.com/generate_204
+    interval: 120
+  - name: SELECT
+    type: select
+    disable-udp: false
+    use:
+      - MIX
+  - name: SERVER-UMUM
+    type: select
+    disable-udp: false
+    proxies:
+      - AUTO-MIX
+      - SELECT
+      - DIRECT
+  - name: SERVER-GAME
+    type: select
+    disable-udp: false
+    proxies:
+      - AUTO-MIX
+      - SELECT
+      - DIRECT
+rule-providers:
+  Game:
+    type: file
+    behavior: classical
+    path: "./rule_provider/game.yaml"
+  PortGame:
+    type: file
+    behavior: classical
+    path: "./rule_provider/portgame.yaml"
+  Umum:
+    type: file
+    behavior: classical
+    path: "./rule_provider/umum.yaml"
+  indo:
+    type: file
+    behavior: classical
+    path: "./rule_provider/indo.yaml"
+  Sosmed:
+    type: file
+    behavior: classical
+    path: "./rule_provider/sosmed.yaml"
+  Streaming:
+    type: file
+    behavior: classical
+    path: "./rule_provider/streaming.yaml"
+  Bankid:
+    type: file
+    behavior: domain
+    path: "./rule_provider/bankid.yaml"
+  Tiktok:
+    type: file
+    behavior: domain
+    path: "./rule_provider/tiktok.yaml"
+  Meta:
+    type: file
+    behavior: domain
+    path: "./rule_provider/meta.yaml"
+rules:
+  - RULE-SET,Umum,SERVER-UMUM
+  - RULE-SET,Game,SERVER-GAME
+  - RULE-SET,PortGame,SERVER-GAME
+  - RULE-SET,indo,SERVER-UMUM
+  - RULE-SET,Sosmed,SERVER-UMUM
+  - RULE-SET,Streaming,SERVER-UMUM
+  - RULE-SET,Bankid,SERVER-UMUM
+  - RULE-SET,Tiktok,SERVER-UMUM
+  - RULE-SET,Meta,SERVER-UMUM
+  - MATCH,SERVER-UMUM
+dns:
+  enable: true
+  ipv6: false
+  enhanced-mode: fake-ip
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter-mode: blacklist
+  fake-ip-filter:
+    - "*.lan"
+    - "*.local"
+  respect-rules: true
+  use-hosts: true
+  use-system-hosts: true
+  default-nameserver:
+    - 1.1.1.1
+    - 8.8.8.8
+  nameserver:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+    - tls://1.0.0.1
+  fallback:
+    - https://dns.cloudflare.com/dns-query
+    - https://dns.google/dns-query
+    - tls://8.8.4.4
+  proxy-server-nameserver:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+  fallback-filter:
+    ipcidr:
+      - 240.0.0.0/4
+  prefer-h3: false

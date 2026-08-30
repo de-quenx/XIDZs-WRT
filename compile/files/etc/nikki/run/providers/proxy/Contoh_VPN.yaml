@@ -1,0 +1,122 @@
+# Modification By @xidz_x
+proxies :
+- name: SNI/SSL VLESS
+  server: server.com
+  port: 443
+  type: vless
+  uuid: e12f52cd-7e50-4fdd-97d0-809d658d9926
+  alterId: 0
+  cipher: auto
+  tls: true
+  skip-cert-verify: true
+  servername: bugsni.com
+  network: ws
+  ws-opts:
+    path: /vless-ws
+    headers:
+      Host: server.com
+  udp: true
+- name: CDN/WS VLESS
+  server: ipcdn/bugcdn.com
+  port: 80
+  type: vless
+  uuid: e12f52cd-7e50-4fdd-97d0-809d658d9926
+  alterId: 0
+  cipher: auto
+  tls: false
+  skip-cert-verify: true
+  network: ws
+  ws-opts:
+    path: /vless-ws
+    headers:
+      Host: server.com
+  udp: true
+- name: SNI/SSL VMESS
+  server: server.com
+  port: 443
+  type: vless
+  uuid: e12f52cd-7e50-4fdd-97d0-809d658d9926
+  alterId: 0
+  cipher: auto
+  tls: true
+  skip-cert-verify: true
+  servername: bugsni.com
+  network: ws
+  ws-opts:
+    path: /vmess-ws
+    headers:
+      Host: server.com
+  udp: true
+- name: CDN/WS VMESS
+  server: ipcdn/bugcdn.com
+  port: 80
+  type: vless
+  uuid: e12f52cd-7e50-4fdd-97d0-809d658d9926
+  alterId: 0
+  cipher: auto
+  tls: false
+  skip-cert-verify: true
+  network: ws
+  ws-opts:
+    path: /vmess-ws
+    headers:
+      Host: server.com
+  udp: true
+- name: WILCARD
+  server: server.com
+  port: 443
+  type: vless
+  uuid: e12f52cd-7e50-4fdd-97d0-809d658d9926
+  alterId: 0
+  cipher: auto
+  tls: true
+  skip-cert-verify: true
+  servername: bug.com.server.com
+  network: ws
+  ws-opts:
+    path: /vless-ws
+    headers:
+      Host: bug.com.server.com
+  udp: true
+- name: Trojan GFW (SNI)
+  type: trojan
+  server: server.com
+  port: 443
+  password: password
+  udp: true
+  sni: bugsni.com
+  skip-cert-verify: true
+- name: Trojan GO/WS (CDN)
+  server: ipcdn/bugcdn.com
+  port: 443
+  type: trojan
+  password: password
+  network: ws
+  sni: server.com
+  skip-cert-verify: true
+  udp: true
+  ws-opts:
+    path: /PATH
+    headers:
+        Host: server.com
+- name: Trojan XTLS (SNI)
+  server: server.com
+  port: 443
+  type: trojan
+  password: password
+  flow: xtls-rprx-direct
+  skip-cert-verify: true
+  sni: bugsni.com
+  udp: true
+- name: Trojan gRPC (SNI)
+  type: trojan
+  server: server.com
+  port: 443
+  password: password
+  udp: true
+  sni: bugsni.com
+  skip-cert-verify: true
+  network: grpc
+  grpc-opts:
+    grpc-service-name: NAMAGRPC
+  

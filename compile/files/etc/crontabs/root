@@ -1,0 +1,17 @@
+# Crontab schedule - Use crontab.guru for reference
+# Modem IP renewal - Mon-Sat 03:30
+#30 3 * * 1-6 echo AT+CFUN=4 | atinout - /dev/ttyUSB1 - && sleep 3 && ifdown wan && sleep 3 && echo AT+CFUN=1 | atinout - /dev/ttyUSB1 - && sleep 3 && ifup wan
+# Modem restart - Sunday 03:30
+#30 3 * * 0 echo AT^RESET | atinout - /dev/ttyUSB1 - && sleep 20 && ifdown wan && ifup wan
+# Modem restart - Daily 03:30
+#30 3 * * * echo AT^RESET | atinout - /dev/ttyUSB1 - && sleep 20 && ifdown wan && ifup wan
+# Fibocom restart - Daily 03:30
+#30 3 * * * ifdown fibocom && sleep 3 && ifup fibocom
+# restart openclash every 8h
+#0 */8 * * * /etc/init.d/openclash restart
+# restart xidzs bot every 12h
+#0 */12 * * * /etc/init.d/xidzs restart
+# Network stats every 5m
+# RAM cleanup every 10h
+0 */10 * * * /sbin/free.sh >/dev/null 2>&1
+*/5 * * * * /www/netmonitor/vnstati/vnstati.sh >/dev/null 2>&1

@@ -1,0 +1,3 @@
+- isi akun hanya di mix.yaml dan id.yaml atau mix.yaml saja
+- untuk lainnya opsional tergantung kebutuhan
+# XIDZs-WRT 2026

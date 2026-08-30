@@ -1,0 +1,168 @@
+mode: rule
+log-level: info
+ipv6: false
+allow-lan: true
+unified-delay: true
+tcp-concurrent: true
+profile:
+  store-selected: true
+  store-fake-ip: true
+sniffing:
+  enable: true
+  sniff:
+    tls:
+      ports:
+        - 443
+        - 8443
+    http:
+      ports:
+        - 80
+        - 8080-8880
+  force-dns-mapping: true
+tun:
+  enable: true
+  stack: mixed
+  device: nikki
+  dns-hijack:
+    - any:53
+    - tcp://any:53
+  auto-route: true
+  auto-redirect: true
+  strict-route: true
+  mtu: 1420
+  endpoint-independent-nat: true
+find-process-mode: off
+keep-alive-idle: 60
+keep-alive-interval: 10
+proxy-providers:
+  ID:
+    type: file
+    path: "./providers/proxy/id.yaml"
+    health-check:
+      enable: true
+      url: https://www.gstatic.com/generate_204
+      interval: 120
+  MIX:
+    type: file
+    path: "./providers/proxy/mix.yaml"
+    health-check:
+      enable: true
+      url: https://www.gstatic.com/generate_204
+      interval: 120
+proxy-groups:
+  - name: AUTO-ID-MIX
+    type: fallback
+    disable-udp: false
+    use:
+      - ID
+      - MIX
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+  - name: LB-MIX-ID
+    type: load-balance
+    strategy: consistent-hashing
+    disable-udp: false
+    use:
+      - MIX
+      - ID
+    url: https://www.gstatic.com/generate_204
+    interval: 120
+  - name: SERVER-UMUM
+    type: select
+    disable-udp: false
+    proxies:
+      - AUTO-ID-MIX
+      - LB-MIX-ID
+      - DIRECT
+  - name: SERVER-INDO
+    type: select
+    disable-udp: false
+    proxies:
+      - AUTO-ID-MIX
+      - DIRECT
+  - name: SERVER-GAME
+    type: select
+    disable-udp: false
+    proxies:
+      - AUTO-ID-MIX
+      - DIRECT
+  - name: BLOCK-IKLAN
+    type: select
+    disable-udp: false
+    proxies:
+      - REJECT
+      - SERVER-UMUM
+rule-providers:
+  Game:
+    type: file
+    behavior: classical
+    path: "./providers/rule/game.yaml"
+  PortGame:
+    type: file
+    behavior: classical
+    path: "./providers/rule/portgame.yaml"
+  Umum:
+    type: file
+    behavior: classical
+    path: "./providers/rule/umum.yaml"
+  indo:
+    type: file
+    behavior: classical
+    path: "./providers/rule/indo.yaml"
+  Sosmed:
+    type: file
+    behavior: classical
+    path: "./providers/rule/sosmed.yaml"
+  Streaming:
+    type: file
+    behavior: classical
+    path: "./providers/rule/streaming.yaml"
+  Bankid:
+    type: file
+    behavior: domain
+    path: "./providers/rule/bankid.yaml"
+  Tiktok:
+    type: file
+    behavior: domain
+    path: "./providers/rule/tiktok.yaml"
+  Meta:
+    type: file
+    behavior: domain
+    path: "./providers/rule/meta.yaml"
+rules:
+  - RULE-SET,Umum,SERVER-UMUM
+  - RULE-SET,Game,SERVER-GAME
+  - RULE-SET,PortGame,SERVER-GAME
+  - RULE-SET,indo,SERVER-INDO
+  - RULE-SET,Sosmed,SERVER-INDO
+  - RULE-SET,Streaming,SERVER-UMUM
+  - RULE-SET,Bankid,SERVER-INDO
+  - RULE-SET,Tiktok,SERVER-UMUM
+  - RULE-SET,Meta,SERVER-INDO
+  - MATCH,SERVER-UMUM
+dns:
+  enable: true
+  ipv6: false
+  enhanced-mode: fake-ip
+  listen: 0.0.0.0:1053
+  fake-ip-range: 198.18.0.1/16
+  fake-ip-filter-mode: blacklist
+  fake-ip-filter:
+    - "*.lan"
+    - "*.local"
+  respect-rules: true
+  use-system-hosts: true
+  default-nameserver:
+    - 1.1.1.1
+    - 8.8.8.8
+  proxy-server-nameserver:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+  nameserver:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+    - tls://1.0.0.1
+  fallback:
+    - https://dns.cloudflare.com/dns-query
+    - https://dns.google/dns-query
+  prefer-h3: false

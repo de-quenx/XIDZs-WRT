@@ -1,0 +1,42 @@
+proxies:
+- name: FO - ETH0
+  type: direct
+  udp: true
+  ip-version: ipv4
+  interface-name: eth0
+  
+- name: MODEM 1 - USB0
+  type: direct
+  udp: true
+  ip-version: ipv4
+  interface-name: usb0
+
+- name: MODEM 2 - USB1
+  type: direct
+  udp: true
+  ip-version: ipv4
+  interface-name: usb1
+
+- name: MODEM 3 - ETH1
+  type: direct
+  udp: true
+  ip-version: ipv4
+  interface-name: eth1
+
+- name: MODEM 4 - ETH2
+  type: direct
+  udp: true
+  ip-version: ipv4
+  interface-name: eth2
+
+- name: MODEM 5 - WWAN0
+  type: direct
+  udp: true
+  ip-version: ipv4
+  interface-name: wwan0
+
+- name: MODEM 6 - WWAN2
+  type: direct
+  udp: true
+  ip-version: ipv4
+  interface-name: wwan2

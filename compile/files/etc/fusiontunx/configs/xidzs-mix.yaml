@@ -1,0 +1,187 @@
+port: 7890
+redir-port: 7891
+socks-port: 7892
+mixed-port: 7893
+tproxy-port: 7894
+allow-lan: true
+bind-address: '*'
+routing-mark: 0x100
+mode: rule
+log-level: silent
+ipv6: false
+external-controller: 0.0.0.0:9090
+external-ui: ui
+secret: quenx
+geodata-mode: true
+geodata-loader: memconservative
+global-client-fingerprint: chrome
+keep-alive-interval: 15
+tcp-concurrent: true
+unified-delay: true
+tun:
+  enable: false
+  stack: gvisor
+  device: Meta
+  dns-hijack:
+    - any:53
+sniffer:
+  enable: true
+  sniff:
+    HTTP:
+      ports: [80, 8080-8880]
+      override-destination: true
+    TLS:
+      ports: [443, 8443]
+  skip-domain:
+    - '+.microsoft.com'
+    - '+.windows.com'
+dns:
+  enable: true
+  ipv6: false
+  enhanced-mode: redir-host
+  listen: 0.0.0.0:1053
+  default-nameserver:
+    - 1.1.1.1
+    - 8.8.8.8
+  nameserver:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+    - tls://9.9.9.9
+  fallback:
+    - https://1.0.0.1/dns-query
+    - tls://149.112.112.112
+  fallback-filter:
+    geoip: true
+    geoip-code: ID
+  proxy-server-nameserver:
+    - 112.215.203.246
+    - 112.215.203.247
+    - 112.215.203.248
+    - 112.215.203.254
+    - 112.215.198.248
+    - 112.215.198.254
+profile:
+  store-selected: true
+  store-fake-ip: false
+proxy-providers:
+  MODEM1:
+    type: file
+    path: ./proxy_providers/modem1.yaml
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 10
+  MODEM2:
+    type: file
+    path: ./proxy_providers/modem2.yaml
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 10
+proxy-groups:
+  - name: MODEM1
+    type: select
+    disable-udp: false
+    interface-name: usb0
+    use:
+      - MODEM1
+  - name: MODEM2
+    type: select
+    disable-udp: false
+    interface-name: eth1
+    use:
+      - MODEM2
+  - name: LB-2-MODEM
+    type: load-balance
+    strategy: round-robin
+    disable-udp: false
+    proxies:
+      - MODEM1
+      - MODEM2
+    url: http://www.gstatic.com/generate_204
+    interval: 60
+  - name: SERVER-UMUM
+    type: select
+    disable-udp: false
+    proxies:
+      - LB-2-MODEM
+      - MODEM1
+      - MODEM2
+      - DIRECT
+  - name: SERVER-INDO
+    type: select
+    disable-udp: false
+    proxies:
+      - LB-2-MODEM
+      - MODEM1
+      - MODEM2
+      - DIRECT
+  - name: SERVER-GAME
+    type: select
+    disable-udp: false
+    proxies:
+      - LB-2-MODEM
+      - MODEM1
+      - MODEM2
+      - DIRECT
+  - name: BLOCK-IKLAN
+    type: select
+    disable-udp: false
+    proxies:
+      - REJECT
+      - LB-2-MODEM
+rule-providers:
+  OisdSmall:
+    type: http
+    behavior: classical
+    path: ./rule_providers/oisd_small.yaml
+    url: https://raw.githubusercontent.com/hillz2/openclash_adblock/main/oisd_small.yaml
+    interval: 28800
+  Game:
+    type: file
+    behavior: classical
+    path: ./rule_providers/game.yaml
+  PortGame:
+    type: file
+    behavior: classical
+    path: ./rule_providers/portgame.yaml
+  Umum:
+    type: file
+    behavior: classical
+    path: ./rule_providers/umum.yaml
+  Indo:
+    type: file
+    behavior: classical
+    path: ./rule_providers/indo.yaml
+  Sosmed:
+    type: file
+    behavior: classical
+    path: ./rule_providers/sosmed.yaml
+  Streaming:
+    type: file
+    behavior: classical
+    path: ./rule_providers/streaming.yaml
+  Bankid:
+    type: file
+    behavior: domain
+    path: ./rule_providers/bankid.yaml
+  Tiktok:
+    type: file
+    behavior: domain
+    path: ./rule_providers/tiktok.yaml
+  Meta:
+    type: file
+    behavior: domain
+    path: ./rule_providers/meta.yaml
+rules:
+  - RULE-SET,OisdSmall,BLOCK-IKLAN
+  - RULE-SET,Umum,SERVER-UMUM
+  - RULE-SET,Game,SERVER-GAME
+  - RULE-SET,PortGame,SERVER-GAME
+  - RULE-SET,Indo,SERVER-INDO
+  - RULE-SET,Sosmed,SERVER-INDO
+  - RULE-SET,Streaming,SERVER-UMUM
+  - RULE-SET,Bankid,SERVER-INDO
+  - RULE-SET,Tiktok,SERVER-UMUM
+  - RULE-SET,Meta,SERVER-INDO
+  - MATCH,SERVER-UMUM

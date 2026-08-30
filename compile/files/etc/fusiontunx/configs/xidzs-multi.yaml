@@ -1,0 +1,199 @@
+port: 7890
+redir-port: 7891
+socks-port: 7892
+mixed-port: 7893
+tproxy-port: 7894
+allow-lan: true
+bind-address: '*'
+routing-mark: 0x100
+mode: rule
+log-level: silent
+ipv6: false
+external-controller: 0.0.0.0:9090
+external-ui: ui
+secret: quenx
+geodata-mode: true
+geodata-loader: memconservative
+global-client-fingerprint: chrome
+keep-alive-interval: 15
+tcp-concurrent: true
+unified-delay: true
+tun:
+  enable: false
+  stack: gvisor
+  device: Meta
+  dns-hijack:
+    - any:53
+sniffer:
+  enable: true
+  sniff:
+    HTTP:
+      ports: [80, 8080-8880]
+      override-destination: true
+    TLS:
+      ports: [443, 8443]
+  skip-domain:
+    - '+.microsoft.com'
+    - '+.windows.com'
+dns:
+  enable: true
+  ipv6: false
+  enhanced-mode: redir-host
+  listen: 0.0.0.0:1053
+  default-nameserver:
+    - 1.1.1.1
+    - 8.8.8.8
+  nameserver:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
+    - tls://9.9.9.9
+  fallback:
+    - https://1.0.0.1/dns-query
+    - tls://149.112.112.112
+  fallback-filter:
+    geoip: true
+    geoip-code: ID
+  proxy-server-nameserver:
+    - 112.215.203.246
+    - 112.215.203.247
+    - 112.215.203.248
+    - 112.215.203.254
+    - 112.215.198.248
+    - 112.215.198.254
+profile:
+  store-selected: true
+  store-fake-ip: false
+proxy-providers:
+  MIX:
+    type: file
+    path: ./proxy_providers/mix.yaml
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: 120
+proxy-groups:
+  - name: AUTO-MIX
+    type: fallback
+    disable-udp: false
+    use:
+      - MIX
+    url: http://www.gstatic.com/generate_204
+    interval: 120
+  - name: SERVER-UMUM
+    type: select
+    disable-udp: false
+    proxies:
+      - AUTO-MIX
+      - DIRECT
+  - name: SERVER-GAME
+    type: select
+    disable-udp: false
+    proxies:
+      - SERVER-UMUM
+      - DIRECT
+  - name: FB-IG-LINE
+    type: select
+    disable-udp: false
+    proxies:
+      - DIRECT
+      - SERVER-UMUM
+  - name: WHATSAPP
+    type: select
+    disable-udp: false
+    proxies:
+      - DIRECT
+      - SERVER-UMUM
+  - name: YOUTUBE
+    type: select
+    disable-udp: false
+    proxies:
+      - DIRECT
+      - SERVER-UMUM
+  - name: NETFLIX
+    type: select
+    disable-udp: false
+    proxies:
+      - DIRECT
+      - SERVER-UMUM
+  - name: TIKTOK
+    type: select
+    disable-udp: false
+    proxies:
+      - DIRECT
+      - SERVER-UMUM
+  - name: BLOCK-IKLAN
+    type: select
+    disable-udp: false
+    proxies:
+      - REJECT
+      - SERVER-UMUM
+rule-providers:
+  OisdSmall:
+    type: http
+    behavior: classical
+    path: ./rule_providers/oisd_small.yaml
+    url: https://raw.githubusercontent.com/hillz2/openclash_adblock/main/oisd_small.yaml
+    interval: 28800
+  Bankid:
+    type: file
+    behavior: domain
+    path: ./rule_providers/bankid.yaml
+  Game:
+    type: file
+    behavior: classical
+    path: ./rule_providers/game.yaml
+  PortGame:
+    type: file
+    behavior: classical
+    path: ./rule_providers/portgame.yaml
+  Umum:
+    type: file
+    behavior: classical
+    path: ./rule_providers/umum.yaml
+  Whatsapp:
+    type: file
+    behavior: classical
+    path: ./rule_providers/whatsapp.yaml
+  Youtube:
+    type: file
+    behavior: classical
+    path: ./rule_providers/youtube.yaml
+  Fb:
+    type: file
+    behavior: classical
+    path: ./rule_providers/fb.yaml
+  Meta:
+    type: file
+    behavior: classical
+    path: ./rule_providers/meta.yaml
+  Ig:
+    type: file
+    behavior: classical
+    path: ./rule_providers/ig.yaml
+  Line:
+    type: file
+    behavior: classical
+    path: ./rule_providers/line.yaml
+  Netflix:
+    type: file
+    behavior: classical
+    path: ./rule_providers/netflix.yaml
+  Tiktok:
+    type: file
+    behavior: classical
+    path: ./rule_providers/tiktok.yaml
+rules:
+  - RULE-SET,OisdSmall,BLOCK-IKLAN
+  - RULE-SET,Whatsapp,WHATSAPP
+  - RULE-SET,Line,FB-IG-LINE
+  - RULE-SET,Fb,FB-IG-LINE
+  - RULE-SET,Meta,FB-IG-LINE
+  - RULE-SET,Ig,FB-IG-LINE
+  - RULE-SET,Youtube,YOUTUBE
+  - RULE-SET,Netflix,NETFLIX
+  - RULE-SET,Tiktok,TIKTOK
+  - RULE-SET,Umum,SERVER-UMUM
+  - RULE-SET,Game,SERVER-GAME
+  - RULE-SET,PortGame,SERVER-GAME
+  - RULE-SET,Bankid,SERVER-UMUM
+  - MATCH,SERVER-UMUM
