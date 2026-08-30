@@ -1,0 +1,356 @@
+name: Clean
+
+on:
+  workflow_dispatch:
+    inputs:
+      clean_option:
+        description: 'Select cleanup option'
+        required: true
+        default: 'cache_tmp_logs'
+        type: choice
+        options:
+        - 'cache_tmp_logs'
+        - 'artifacts'
+        - 'releases_tags'
+        - 'old_workflows'
+        - 'workflow_caches'
+        - 'all_clean'
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        if: ${{ inputs.clean_option == 'cache_tmp_logs' || inputs.clean_option == 'all_clean' }}
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Clean logs, cache, and tmp directories
+        if: ${{ inputs.clean_option == 'cache_tmp_logs' || inputs.clean_option == 'all_clean' }}
+        run: |
+          echo "Cleaning logs, cache, and tmp directories..."
+
+          echo "Deleting log files..."
+          find . -type f \( -name "*.log" -o -name "*.log.*" \) -print -delete || true
+
+          echo "Deleting cache directories..."
+          find . -type d \( -name "cache" -o -name ".cache" -o -name "__pycache__" -o -name ".pytest_cache" -o -name "node_modules/.cache" -o -name ".ccache" \) -print -exec rm -rf {} + 2>/dev/null || true
+
+          echo "Deleting tmp/temp directories..."
+          find . -type d \( -name "tmp" -o -name "temp" -o -name ".tmp" -o -name ".temp" \) -print -exec rm -rf {} + 2>/dev/null || true
+
+          echo "Deleting build artifacts..."
+          find . -type d \( -name "dist" -o -name "build" -o -name ".next" -o -name ".nuxt" \) -print -exec rm -rf {} + 2>/dev/null || true
+
+          echo "Deleting ImageBuilder firmware compile leftovers..."
+          for base in "$HOME" /opt /tmp; do
+            [ -d "$base" ] || continue
+            find "$base" -maxdepth 8 -not -path "*/actions-runner/*" -not -path "*/hostedtoolcache/*" \( -type d -name "build_dir" -o -type d -name "staging_dir" -o -type d -name "dl" -o -type d -iname "*imagebuilder*" -o -type d -iname "openwrt-sdk*" -o -type d -path "*/bin/targets" \) -print -exec sudo rm -rf {} + 2>/dev/null || true
+          done
+
+          echo "Cleaning /tmp and runner temp directories..."
+          sudo rm -rf /tmp/* /tmp/.[!.]* 2>/dev/null || true
+          sudo rm -rf "${RUNNER_TEMP}"/* 2>/dev/null || true
+
+          echo "Cleaning apt and pip caches..."
+          sudo rm -rf /var/cache/apt/archives/*.deb 2>/dev/null || true
+          rm -rf ~/.cache/pip ~/.cache/go-build ~/.npm 2>/dev/null || true
+
+          echo "Cleanup completed!"
+
+          echo ""
+          echo "Current directory size:"
+          du -sh . 2>/dev/null || true
+
+          echo ""
+          echo "Disk usage:"
+          df -h || true
+
+      - name: Clean Docker images, containers, and build cache
+        if: ${{ inputs.clean_option == 'cache_tmp_logs' || inputs.clean_option == 'all_clean' }}
+        run: |
+          echo "Stopping all running Docker containers..."
+          docker ps -aq | xargs -r docker stop
+
+          echo "Removing all Docker containers..."
+          docker ps -aq | xargs -r docker rm -f
+
+          echo "Removing all Docker images..."
+          docker images -aq | xargs -r docker rmi -f
+
+          echo "Removing all Docker volumes..."
+          docker volume ls -q | xargs -r docker volume rm -f
+
+          echo "Pruning Docker networks..."
+          docker network prune -f
+
+          echo "Pruning Docker builder/buildx cache..."
+          docker builder prune -af
+          docker buildx prune -af 2>/dev/null || true
+
+          echo "Running full Docker system prune..."
+          docker system prune -af --volumes
+
+          echo "Docker disk usage after cleanup:"
+          docker system df
+
+      - name: Delete all workflow artifacts
+        if: ${{ inputs.clean_option == 'artifacts' || inputs.clean_option == 'all_clean' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            let page = 1;
+            let hasMore = true;
+            let totalDeleted = 0;
+
+            while (hasMore) {
+              const response = await github.rest.actions.listArtifactsForRepo({
+                owner,
+                repo,
+                per_page: 100,
+                page: page
+              });
+
+              const artifacts = response.data.artifacts;
+
+              if (artifacts.length === 0) {
+                hasMore = false;
+                break;
+              }
+
+              for (const artifact of artifacts) {
+                console.log(`Deleting artifact: ${artifact.name} (ID: ${artifact.id})`);
+
+                try {
+                  await github.rest.actions.deleteArtifact({
+                    owner,
+                    repo,
+                    artifact_id: artifact.id
+                  });
+                  console.log(`Deleted: ${artifact.name}`);
+                  totalDeleted++;
+                } catch (error) {
+                  console.error(`Failed to delete ${artifact.name}: ${error.message}`);
+                }
+              }
+
+              page++;
+            }
+
+            console.log(`\nTotal artifacts deleted: ${totalDeleted}`);
+
+      - name: Delete all workflow caches
+        if: ${{ inputs.clean_option == 'workflow_caches' || inputs.clean_option == 'all_clean' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            console.log("Fetching all workflow caches...");
+
+            let totalDeleted = 0;
+            let page = 1;
+            let hasMore = true;
+
+            while (hasMore) {
+              try {
+                const response = await github.rest.actions.getActionsCacheList({
+                  owner,
+                  repo,
+                  per_page: 100,
+                  page: page
+                });
+
+                const caches = response.data.actions_caches;
+
+                if (caches.length === 0) {
+                  hasMore = false;
+                  break;
+                }
+
+                console.log(`Found ${caches.length} caches on page ${page}`);
+
+                for (const cache of caches) {
+                  console.log(`Deleting cache: ${cache.key} (ID: ${cache.id}, Size: ${(cache.size_in_bytes / 1024).toFixed(2)} KB)`);
+
+                  try {
+                    await github.rest.actions.deleteActionsCacheById({
+                      owner,
+                      repo,
+                      cache_id: cache.id
+                    });
+                    console.log(`Deleted cache: ${cache.key}`);
+                    totalDeleted++;
+                  } catch (error) {
+                    console.error(`Failed to delete cache ${cache.key}: ${error.message}`);
+                  }
+                }
+
+                page++;
+              } catch (error) {
+                console.error(`Error fetching caches: ${error.message}`);
+                hasMore = false;
+              }
+            }
+
+            console.log(`\nTotal workflow caches deleted: ${totalDeleted}`);
+
+      - name: Delete all releases and tags
+        if: ${{ inputs.clean_option == 'releases_tags' || inputs.clean_option == 'all_clean' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            let totalReleasesDeleted = 0;
+
+            console.log("Fetching all releases...");
+
+            let page = 1;
+            let hasMore = true;
+
+            while (hasMore) {
+              const response = await github.rest.repos.listReleases({
+                owner,
+                repo,
+                per_page: 100,
+                page: page
+              });
+
+              const releases = response.data;
+
+              if (releases.length === 0) {
+                hasMore = false;
+                break;
+              }
+
+              for (const release of releases) {
+                console.log(`Deleting release: ${release.name || release.tag_name} (ID: ${release.id})`);
+
+                try {
+                  await github.rest.repos.deleteRelease({
+                    owner,
+                    repo,
+                    release_id: release.id
+                  });
+                  console.log(`Deleted release: ${release.name || release.tag_name}`);
+                  totalReleasesDeleted++;
+                } catch (error) {
+                  console.error(`Failed to delete release ${release.name || release.tag_name}: ${error.message}`);
+                }
+              }
+
+              page++;
+            }
+
+            console.log("\nFetching all tags...");
+            let totalTagsDeleted = 0;
+            page = 1;
+            hasMore = true;
+
+            while (hasMore) {
+              const response = await github.rest.repos.listTags({
+                owner,
+                repo,
+                per_page: 100,
+                page: page
+              });
+
+              const tags = response.data;
+
+              if (tags.length === 0) {
+                hasMore = false;
+                break;
+              }
+
+              for (const tag of tags) {
+                console.log(`Deleting tag: ${tag.name}`);
+
+                try {
+                  await github.rest.git.deleteRef({
+                    owner,
+                    repo,
+                    ref: `tags/${tag.name}`
+                  });
+                  console.log(`Deleted tag: ${tag.name}`);
+                  totalTagsDeleted++;
+                } catch (error) {
+                  console.error(`Failed to delete tag ${tag.name}: ${error.message}`);
+                }
+              }
+
+              page++;
+            }
+
+            console.log(`\nTotal releases deleted: ${totalReleasesDeleted}`);
+            console.log(`Total tags deleted: ${totalTagsDeleted}`);
+
+      - name: Delete old workflow runs (keep latest 4)
+        if: ${{ inputs.clean_option == 'old_workflows' || inputs.clean_option == 'all_clean' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const keepCount = 4;
+
+            const workflows = await github.rest.actions.listRepoWorkflows({
+              owner,
+              repo
+            });
+
+            let totalDeleted = 0;
+
+            for (const workflow of workflows.data.workflows) {
+              console.log(`\nProcessing workflow: ${workflow.name} (ID: ${workflow.id})`);
+
+              const runs = await github.rest.actions.listWorkflowRuns({
+                owner,
+                repo,
+                workflow_id: workflow.id,
+                per_page: 100
+              });
+
+              const allRuns = runs.data.workflow_runs;
+              console.log(`Total runs found: ${allRuns.length}`);
+
+              if (allRuns.length <= keepCount) {
+                console.log(`Keeping all ${allRuns.length} runs (less than ${keepCount})`);
+                continue;
+              }
+
+              allRuns.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+              const runsToDelete = allRuns.slice(keepCount);
+
+              console.log(`Keeping latest ${keepCount} runs, deleting ${runsToDelete.length} old runs`);
+
+              for (const run of runsToDelete) {
+                try {
+                  console.log(`Deleting run: ${run.name} (ID: ${run.id}, Created: ${run.created_at})`);
+
+                  await github.rest.actions.deleteWorkflowRun({
+                    owner,
+                    repo,
+                    run_id: run.id
+                  });
+
+                  console.log(`Deleted run ID: ${run.id}`);
+                  totalDeleted++;
+                } catch (error) {
+                  console.error(`Failed to delete run ${run.id}: ${error.message}`);
+                }
+              }
+            }
+
+            console.log(`\nTotal workflow runs deleted: ${totalDeleted}`);

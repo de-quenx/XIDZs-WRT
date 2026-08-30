@@ -1,0 +1,122 @@
+# =====================================================================
+# JADWAL EKSEKUSI SPESIFIK - Target Tahun 2026
+# =====================================================================
+# Perhatian: Server Github Actions menggunakan zona waktu UTC.
+# WIB = UTC + 7 Jam.
+#
+# Job A (ophub): 02 September, 01:00 WIB -> 01 September, 18:00 UTC
+# Job B (ulo):   02 September, 11:00 WIB -> 02 September, 04:00 UTC (Jarak 10 Jam)
+# Job C (offc):  02 September, 21:00 WIB -> 02 September, 14:00 UTC (Jarak 10 Jam)
+# Job D (opt):   03 September, 07:00 WIB -> 03 September, 00:00 UTC (Jarak 10 Jam)
+# =====================================================================
+
+name: Scheduled builds Jobs
+
+on:
+  schedule:
+    - cron: '0 18 1 9 *' # Memicu Job A
+    - cron: '0 4 2 9 *'  # Memicu Job B
+    - cron: '0 14 2 9 *' # Memicu Job C
+    - cron: '0 0 3 9 *'  # Memicu Job D
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  job-a:
+    name: Job A (all-devices-ophub)
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 18 1 9 *'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Trigger Builds.yml - OPHUB
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "$(date +'%Y')" != "2026" ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            echo "Bukan tahun 2026. Membatalkan eksekusi otomatis."
+            exit 0
+          fi
+          
+          gh workflow run Builds.yml \
+            -f release_branch="openwrt:25.12.5" \
+            -f rootfs_size="1024" \
+            -f target="all-devices-ophub" \
+            -f tunnel="all-tunnel-v2" \
+            -f clean="true"
+
+  job-b:
+    name: Job B (all-devices-ulo)
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 4 2 9 *'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Trigger Builds.yml - ULO
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "$(date +'%Y')" != "2026" ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            echo "Bukan tahun 2026. Membatalkan eksekusi otomatis."
+            exit 0
+          fi
+          
+          gh workflow run Builds.yml \
+            -f release_branch="openwrt:25.12.5" \
+            -f rootfs_size="1024" \
+            -f target="all-devices-ulo" \
+            -f tunnel="all-tunnel-v2" \
+            -f clean="true"
+
+  job-c:
+    name: Job C (all-devices-official)
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 14 2 9 *'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Trigger Builds.yml - OFFICIAL
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "$(date +'%Y')" != "2026" ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            echo "Bukan tahun 2026. Membatalkan eksekusi otomatis."
+            exit 0
+          fi
+          
+          gh workflow run Builds.yml \
+            -f release_branch="openwrt:25.12.5" \
+            -f rootfs_size="1024" \
+            -f target="all-devices-official" \
+            -f tunnel="all-tunnel-v2" \
+            -f clean="true"
+
+  job-d:
+    name: Job D (opt-devices-official)
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 0 3 9 *'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Trigger Builds.yml - OPT OFFICIAL
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "$(date +'%Y')" != "2026" ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            echo "Bukan tahun 2026. Membatalkan eksekusi otomatis."
+            exit 0
+          fi
+          
+          gh workflow run Builds.yml \
+            -f release_branch="openwrt:25.12.5" \
+            -f rootfs_size="1024" \
+            -f target="opt-devices-official" \
+            -f tunnel="all-tunnel-v2" \
+            -f clean="true"

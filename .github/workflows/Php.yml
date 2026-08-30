@@ -1,0 +1,54 @@
+name: PHP Composer
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Check directory for composer.json
+        id: check-dir
+        run: |
+          if [ -f "composer.json" ]; then
+            echo "path=." >> $GITHUB_OUTPUT
+            echo "exists=true" >> $GITHUB_OUTPUT
+          elif [ -f "compile/composer.json" ]; then
+            echo "path=compile" >> $GITHUB_OUTPUT
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "⚠️ composer.json tidak ditemukan. Melewati tahap build PHP."
+          fi
+
+      - name: Validate composer.json and composer.lock
+        if: steps.check-dir.outputs.exists == 'true'
+        working-directory: ${{ steps.check-dir.outputs.path }}
+        run: composer validate --strict
+
+      - name: Get Composer Cache Directory
+        if: steps.check-dir.outputs.exists == 'true'
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache Composer packages
+        if: steps.check-dir.outputs.exists == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-
+
+      - name: Install dependencies
+        if: steps.check-dir.outputs.exists == 'true'
+        working-directory: ${{ steps.check-dir.outputs.path }}
+        run: composer install --prefer-dist --no-progress
