@@ -404,7 +404,7 @@ run_tunnel() {
         ariadl "${oc_core}" "files/etc/openclash/core/clash_meta.gz"
         
         gzip -d "files/etc/openclash/core/clash_meta.gz"
-        chmod 755 "files/etc/openclash/core/clash_meta" "files/etc/openclash/Country.mmdb" "files/etc/openclash/GeoIP.dat" "files/etc/openclash/GeoSite.dat"
+        chmod 755 "files/etc/openclash/core/clash_meta" "files/etc/openclash/Country.mmdb" "files/etc/openclash/geoip.dat" "files/etc/openclash/geosite.dat"
         sed -i "/# Tunnel/a \    ln -sf /etc/openclash/history/xidzs.db /etc/openclash/cache.db\n    ln -sf /etc/openclash/core/clash_meta /etc/openclash/clash" "files/etc/uci-defaults/99-init-settings.sh"
     }
     
@@ -446,7 +446,7 @@ run_tunnel() {
         local n_file=$(basename "${nikki_url}")
         ariadl "${nikki_url}" "packages/${n_file}"
         tar -xzvf "packages/${n_file}" -C "packages" && rm -f "packages/${n_file}"
-        chmod 755 "files/etc/nikki/run/Country.mmdb" "files/etc/nikki/run/GeoIP.dat" "files/etc/nikki/run/GeoSite.dat"
+        chmod 755 "files/etc/nikki/run/Country.mmdb" "files/etc/nikki/run/geoip.dat" "files/etc/nikki/run/geosite.dat"
     }
     
     setup_fusiontunx() {
@@ -517,6 +517,7 @@ run_tunnel() {
         core_name=$(echo "$core_name" | sed -E 's/([0-9]{4}\.[0-9]{2}\.[0-9]{2})\.([a-z0-9]+)/\1~\2/')
         
         ariadl "${co_core}" "packages/${core_name}"
+        chmod 755 "files/etc/clashoo/Country.mmdb" "files/etc/clashoo/geoip.dat" "files/etc/clashoo/geosite.dat"
     }
     
     setup_passwallssh() {
