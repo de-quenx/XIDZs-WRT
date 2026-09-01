@@ -23,3 +23,32 @@ jobs:
               repo: context.repo.repo,
               run_id: context.payload.workflow_run.id
             });
+
+  cleanup-history:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Delete previous monitor runs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: wfs } = await github.rest.actions.listRepoWorkflows({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            const monitor = wfs.workflows.find(w => w.name === 'Monitor Builds Failures');
+            const { data } = await github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: monitor.id,
+              status: 'completed'
+            });
+            for (const run of data.workflow_runs) {
+              if (run.id !== context.runId) {
+                await github.rest.actions.deleteWorkflowRun({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  run_id: run.id
+                });
+              }
+            }
