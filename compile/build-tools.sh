@@ -632,7 +632,9 @@ run_makeimage() {
         log "INFO" "WIFIOFF target: Excluded wireless drivers"
     else
         log "INFO" "Standard target: Adding wireless drivers"
-        if [[ "$target_profile" =~ rpi-[2-5] ]]; then
+        if [[ "$target_profile" == "rpi-5" && "${BASE:-}" == "immortalwrt" ]]; then
+            PACKAGES+=" wpad-openssl iw iwinfo wireless-regdb kmod-cfg80211 kmod-mac80211"
+        elif [[ "$target_profile" =~ rpi-[2-5] ]]; then
             PACKAGES+=" wpad-basic-mbedtls iw iwinfo wireless-regdb kmod-cfg80211 kmod-mac80211"
         else
             PACKAGES+=" wpad-openssl iw iwinfo wireless-regdb kmod-cfg80211 kmod-mac80211"
@@ -1124,7 +1126,7 @@ run_rename() {
         "_s905l2_|s905l2_MGV_M301A"
         "_s905x2-x96max-2g_|s905x2-x96Max2Gb-A95X-F2"
         "_s905x2_|s905x2_x96Max-4Gb-Tx5-Max"
-        "_s905x2-b860h-v5_|s905x2_B860H_V5"
+        "_s905x2-b860hv5_|s905x2_B860H-V5"
         "_s905x2-hg680fj_|s905x2_HG680_FJ"
         "_s905x3-x96air_|s905x3-X96Air100M"
         "_s905x3-x96air-gb_|s905x3-x96Air1Gbps"
